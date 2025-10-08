@@ -72,16 +72,30 @@ hy = fetch_yf('BAMLH0A0HYM2')  # Optional: ersetzen, wenn BofA HY Spread via Yah
 # CAPE über Shiller Excel (nur letzter Wert)
 def fetch_cape():
     try:
+        # Shiller Excel-Datei
         url = "https://www.econ.yale.edu/~shiller/data/ie_data.xls"
         df = pd.read_excel(url, sheet_name="Data", skiprows=7)
+        
+        # Spalten, auf CAPE achten
         df = df.dropna(subset=["CAPE"])
+        
+        # Letzten verfügbaren Wert nehmen
         last = df.iloc[-1]
-        return {"value": float(last["CAPE"]), "date": str(last["Date"])}
+        return {
+            "value": float(last["CAPE"]),
+            "date": str(last["Date"])
+        }
     except Exception as e:
-        print("Fehler beim CAPE Download:", e)
-        return {"value": None, "date": None}
+        print("Fehler beim CAPE-Download:", e)
+        return {
+            "value": None,
+            "date": None
+        }
 
-cape = fetch_cape()
+if __name__ == "__main__":
+    cape = fetch_cape()
+    print("CAPE:", cape)
+
 
 # High Yield Spread über FRED
 try:

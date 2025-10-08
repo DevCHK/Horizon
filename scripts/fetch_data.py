@@ -1,3 +1,4 @@
+
 import os
 import json
 import datetime as dt
@@ -19,14 +20,14 @@ def lamp_status(spread_val, vix, hy_bps, cape):
 
     # Gesamteinschätzung
     colors = list(s.values())
-    reds = colors.count('Kritisch')
-    yellows = colors.count('Vorsicht')
+    reds = colors.count('red')
+    yellows = colors.count('yellow')
     if reds >= 3:
-        overall = 'Kritisch'
+        overall = 'red'
     elif reds >= 1 and (reds + yellows) >= 2:
-        overall = 'Vorsicht'
+        overall = 'yellow'
     else:
-        overall = 'Stabil'
+        overall = 'green'
     s['overall'] = overall
     return s
 

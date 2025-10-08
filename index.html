@@ -5,65 +5,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risikoanalyse Dashboard</title>
 <style>
-:root {
+   /* Grundfarben für Light/Dark Mode */
+ root {
   --bg: #f8f9fa;
   --text: #111;
   --card-bg: #fff;
 }
 [data-theme="dark"] {
   --bg: #111;
-  --text: #f7f7f7;
+  --text: #f0f0f0;
   --card-bg: #1f1f1f;
 }
-
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background-color: var(--bg);
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: var(--bg);
   color: var(--text);
-  padding: 1rem;
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media(min-width:600px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .card {
+  background-color: var(--card-bg);
 }
 
-h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+  .value {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
 
-.grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
-@media(min-width:600px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .description {
+    font-size: 0.85rem;
+    color: #555;
+  }
 
-.card { background-color: var(--card-bg); padding: 1rem; border-radius: 0.5rem; }
-.value { font-size: 1.25rem; font-weight: bold; }
-.description { font-size: 0.85rem; color: #555; }
-
-canvas { margin-top: 0.5rem; }
+  .trend {
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+  }
 </style>
-
-<!-- Chart.js + Adapter für Zeitachse -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luxon@4.1.3/build/global/luxon.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
 </head>
 <body>
-
-<h1>Risikoanalyse Dashboard</h1>
+<h1>📊 Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
     <div>Spread (10y-2y):</div>
     <div id="spread" class="value">–</div>
-    <div class="description" id="spread-date"></div>
+    <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
+     <div id="spread-date" class="description"></div>
   </div>
   <div class="card">
     <div>VIX:</div>
     <div id="vix" class="value">–</div>
-    <div class="description" id="vix-date"></div>
+    <div class="description">Marktvolatilität (höher = riskanter).</div>
+     <div id="spread-date" class="description"></div>
   </div>
   <div class="card">
     <div>High Yield (bps):</div>
     <div id="hy" class="value">–</div>
-    <div class="description" id="hy-date"></div>
+    <div class="description">Risikoprämie für Hochzinsanleihen.</div>
+     <div id="spread-date" class="description"></div>
   </div>
   <div class="card">
     <div>CAPE:</div>
     <div id="cape" class="value">–</div>
-    <div class="description" id="cape-date"></div>
+    <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
+     <div id="spread-date" class="description"></div>
   </div>
   <div class="card" style="grid-column:1/-1">
     <div>Gesamteinschätzung:</div>
@@ -75,100 +96,53 @@ canvas { margin-top: 0.5rem; }
   </div>
 </div>
 
-<canvas id="combinedChart" height="400" style="margin-top:2rem"></canvas>
-
 <script>
 async function loadData() {
   try {
     const res = await fetch('data/data.json');
     const data = await res.json();
-    console.log('Geladene JSON-Daten:', data);
 
+    // Farbe nach Ampelstatus
     function colorize(value) {
-      if(value==='green') return '#4ade80';
-      if(value==='yellow') return '#facc15';
-      if(value==='red') return '#f87171';
+      if(value === 'green') return '#4ade80';
+      if(value === 'yellow') return '#facc15';
+      if(value === 'red') return '#f87171';
       return '#111';
     }
 
-    // -------------------
-    // Cards aktualisieren
-    // -------------------
-    const cards = [
-      {id:'spread', key:'spread'},
-      {id:'vix', key:'vix'},
-      {id:'hy', key:'high_yield_bps'},
-      {id:'cape', key:'shiller_cape'}
-    ];
-
-    cards.forEach(card => {
-      const val = data[card.key]?.value;
-      const date = data[card.key]?.date;
-      const status = data.status?.[card.key] ?? 'unknown';
-
-      document.getElementById(card.id).textContent = (val != null) ? val : '–';
-      document.getElementById(card.id).style.color = colorize(status);
-      document.getElementById(`${card.id}-date`).textContent = date ? `Datenstand: ${date}` : '';
-    });
-
-    // Gesamteinschätzung
-    const overall = data.status?.overall ?? 'unknown';
-    document.getElementById('overall').textContent = (overall != 'unknown') ? overall : '–';
-    document.getElementById('overall').style.color = colorize(overall);
-
-    document.getElementById('last-updated').textContent = `Letzte Aktualisierung: ${data.timestamp_utc ?? '-'}`;
-
-    // -------------------
-    // Kombiniertes Chart
-    // -------------------
-    const datasets = [];
-    const colors = { spread:'#4ade80', vix:'#f87171', hy:'#facc15', cape:'#3b82f6' };
-    const chartKeys = [
-      {key:'spread', label:'Spread'},
-      {key:'vix', label:'VIX'},
-      {key:'high_yield_bps', label:'High Yield'},
-      {key:'shiller_cape', label:'CAPE'}
-    ];
-
-    chartKeys.forEach(item => {
-      const history = data[item.key]?.history ?? [];
-      const value = data[item.key]?.value;
-
-      // Nur Dataset erstellen, wenn history vorhanden und value nicht null
-      if(history.length > 0 && value != null){
-        const filteredHistory = history
-          .filter(d => d.value != null) // keine null-Werte
-          .map(d => ({x:d.date, y:d.value}));
-        datasets.push({
-          label: item.label,
-          data: filteredHistory,
-          borderColor: colors[item.key],
-          backgroundColor:'rgba(0,0,0,0)',
-          tension:0.3
-        });
-      } else {
-        console.warn(`Kein Dataset für ${item.key}: history leer oder value null`);
-      }
-    });
-
-    const ctx = document.getElementById('combinedChart').getContext('2d');
-    if(datasets.length > 0){
-      new Chart(ctx, {
-        type:'line',
-        data:{datasets},
-        options:{
-          parsing:{xAxisKey:'x',yAxisKey:'y'},
-          responsive:true,
-          scales:{
-            x:{type:'time',time:{unit:'month'},title:{display:true,text:'Datum'}},
-            y:{title:{display:true,text:'Wert'}}
-          },
-          plugins:{legend:{display:true,position:'top'}}
-        }
-      });
-    } else {
-      console.warn('Kein Chart dargestellt: keine validen Daten vorhanden.');
+    // Trendpfeile
+    function trendSymbol(current, previous) {
+      if(previous === undefined || previous === null) return '';
+      if(current > previous) return '▲';
+      if(current < previous) return '▼';
+      return '→';
     }
+
+    // Werte anzeigen mit Trend
+   document.getElementById('spread').textContent =
+  ${data.spread?.value ?? '–'};
+document.getElementById('spread').style.color = colorize(data.status?.spread);
+document.getElementById('spread-date').textContent =
+  data.spread?.date ? Datenstand: ${data.spread.date} : '';
+  
+document.getElementById('vix').textContent =
+  ${data.vix?.value ?? '–'};
+document.getElementById('vix').style.color = colorize(data.status?.vix);
+document.getElementById('vix-date').textContent =
+  data.vix?.date ? Datenstand: ${data.vix.date} : '';
+
+document.getElementById('hy').textContent =
+  ${data.high_yield_bps?.value ?? '–'};
+document.getElementById('hy').style.color = colorize(data.status?.hy);
+document.getElementById('hy-date').textContent =
+  data.high_yield_bps?.date ? Datenstand: ${data.high_yield_bps.date} : '';
+
+document.getElementById('cape').textContent =
+  ${data.shiller_cape?.value ?? '–'};
+document.getElementById('cape').style.color = colorize(data.status?.cape);
+document.getElementById('cape-date').textContent =
+  data.shiller_cape?.date ? Datenstand: ${data.shiller_cape.date} : '';
+
 
   } catch(e) {
     console.error('Fehler beim Laden der Daten', e);
@@ -179,10 +153,8 @@ async function loadData() {
 if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
   document.documentElement.setAttribute('data-theme','dark');
 }
-
+  
 loadData();
 </script>
-
-
 </body>
 </html>

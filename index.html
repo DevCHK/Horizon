@@ -6,7 +6,7 @@
 <title>Risikoanalyse Dashboard</title>
 <style>
    /* Grundfarben für Light/Dark Mode */
- root {
+ :root {
   --bg: #f8f9fa;
   --text: #111;
   --card-bg: #fff;
@@ -72,19 +72,19 @@
     <div>VIX:</div>
     <div id="vix" class="value">–</div>
     <div class="description">Marktvolatilität (höher = riskanter).</div>
-     <div id="spread-date" class="description"></div>
+     <div id="vix-date" class="description"></div>
   </div>
   <div class="card">
     <div>High Yield (bps):</div>
     <div id="hy" class="value">–</div>
     <div class="description">Risikoprämie für Hochzinsanleihen.</div>
-     <div id="spread-date" class="description"></div>
+     <div id="hy-date" class="description"></div>
   </div>
   <div class="card">
     <div>CAPE:</div>
     <div id="cape" class="value">–</div>
     <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
-     <div id="spread-date" class="description"></div>
+     <div id="cape-date" class="description"></div>
   </div>
   <div class="card" style="grid-column:1/-1">
     <div>Gesamteinschätzung:</div>

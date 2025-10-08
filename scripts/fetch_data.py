@@ -13,58 +13,45 @@ OUTFILE = 'data/data.json'
 # -------------------
 def lamp_status(spread_val, vix, hy_bps, cape):
     s = {}
-
-    # VIX Ampel: <20 Grün, 20-30 Gelb, >30 Rot
-    try:
-        if vix is None:
-            s['vix'] = 'unknown'
-        elif vix < 20:
-            s['vix'] = 'green'
-        elif vix <= 30:
-            s['vix'] = 'yellow'
-        else:
-            s['vix'] = 'red'
-    except:
+    # VIX Ampel
+    if vix is None:
         s['vix'] = 'unknown'
+    elif vix < 20:
+        s['vix'] = 'green'
+    elif vix <= 30:
+        s['vix'] = 'yellow'
+    else:
+        s['vix'] = 'red'
 
-    # HY Ampel: <350bp Grün, 350-500 Gelb, >500 Rot
-    try:
-        if hy_bps is None:
-            s['hy'] = 'unknown'
-        elif hy_bps < 350:
-            s['hy'] = 'green'
-        elif hy_bps <= 500:
-            s['hy'] = 'yellow'
-        else:
-            s['hy'] = 'red'
-    except:
+    # HY Ampel
+    if hy_bps is None:
         s['hy'] = 'unknown'
+    elif hy_bps < 350:
+        s['hy'] = 'green'
+    elif hy_bps <= 500:
+        s['hy'] = 'yellow'
+    else:
+        s['hy'] = 'red'
 
-    # CAPE Ampel: <30 Grün, 30-35 Gelb, >35 Rot
-    try:
-        if cape is None:
-            s['cape'] = 'unknown'
-        elif cape < 30:
-            s['cape'] = 'green'
-        elif cape <= 35:
-            s['cape'] = 'yellow'
-        else:
-            s['cape'] = 'red'
-    except:
+    # CAPE Ampel
+    if cape is None:
         s['cape'] = 'unknown'
+    elif cape < 30:
+        s['cape'] = 'green'
+    elif cape <= 35:
+        s['cape'] = 'yellow'
+    else:
+        s['cape'] = 'red'
 
-    # Spread Ampel: <100bp Grün, 100-200bp Gelb, >200bp Rot
-    try:
-        if spread_val is None:
-            s['spread'] = 'unknown'
-        elif spread_val < 100:
-            s['spread'] = 'green'
-        elif spread_val <= 200:
-            s['spread'] = 'yellow'
-        else:
-            s['spread'] = 'red'
-    except:
+    # Spread Ampel
+    if spread_val is None:
         s['spread'] = 'unknown'
+    elif spread_val < 100:
+        s['spread'] = 'green'
+    elif spread_val <= 200:
+        s['spread'] = 'yellow'
+    else:
+        s['spread'] = 'red'
 
     # Gesamte Ampel
     colors = list(s.values())
@@ -83,20 +70,44 @@ def lamp_status(spread_val, vix, hy_bps, cape):
 # -------------------
 # Daten holen
 # -------------------
-
-# FRED API Key aus Secret
 fred_key = os.environ.get("FRED_API_KEY")
+
+# Zeitraum für die letzten 3 Jahre
+end_date = dt.datetime.today()
+start_date = end_date - dt.timedelta(days=3*365)
+start_str = start_date.strftime("%Y-%m-%d")
+end_str = end_date.strftime("%Y-%m-%d")
 
 # 1. US 10y-2y Spread (GS10 - GS2)
 try:
-    url = f"https://api.stlouisfed.org/fred/series/observations?series_id=T10Y2Y&api_key={fred_key}&file_type=json"
-    resp = requests.get(url)
-    data_spread = resp.json()['observations'][-1]
-    spread_val = float(data_spread['value'])
-    spread_date = data_spread['date']
+    url_10y = f"https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key={fred_key}&file_type=json&observation_start={start_str}&observation_end={end_str}"
+    url_2y = f"https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&api_key={fred_key}&file_type=json&observation_start={start_str}&observation_end={end_str}"
+
+    data_10y = requests.get(url_10y).json()['observations']
+    data_2y = requests.get(url_2y).json()['observations']
+
+    df_10y = pd.DataFrame(data_10y)
+    df_10y['value'] = pd.to_numeric(df_10y['value'], errors='coerce')
+    df_10y['date'] = pd.to_datetime(df_10y['date'])
+
+    df_2y = pd.DataFrame(data_2y)
+    df_2y['value'] = pd.to_numeric(df_2y['value'], errors='coerce')
+    df_2y['date'] = pd.to_datetime(df_2y['date'])
+
+    df_spread = pd.merge(df_10y, df_2y, on='date', suffixes=('_10y', '_2y'))
+    df_spread['spread'] = df_spread['value_10y'] - df_spread['value_2y']
+
+    # Aktueller Spread
+    latest_spread = df_spread['spread'].iloc[-1]
+    latest_date = df_spread['date'].iloc[-1].strftime('%Y-%m-%d')
+
+    # Historische Werte für Chart.js
+    spread_history = df_spread[['date','spread']].dropna().to_dict(orient='records')
+
 except:
-    spread_val = None
-    spread_date = None
+    latest_spread = None
+    latest_date = None
+    spread_history = []
 
 # 2. VIX
 try:
@@ -107,22 +118,20 @@ except:
     vix = None
     vix_date = None
 
-# 3. High Yield Spread (BofA US HY Option-Adjusted Spread)
+# 3. High Yield Spread
 try:
-    url = f"https://api.stlouisfed.org/fred/series/observations?series_id=BAMLH0A0HYM2&api_key={fred_key}&file_type=json"
-    resp = requests.get(url)
-    hy_data = resp.json()['observations'][-1]
+    url_hy = f"https://api.stlouisfed.org/fred/series/observations?series_id=BAMLH0A0HYM2&api_key={fred_key}&file_type=json"
+    hy_data = requests.get(url_hy).json()['observations'][-1]
     hy_bps = float(hy_data['value'])
     hy_date = hy_data['date']
 except:
     hy_bps = None
     hy_date = None
 
-# 4. Shiller CAPE (S&P500)
+# 4. Shiller CAPE
 try:
-    url = f"https://api.stlouisfed.org/fred/series/observations?series_id=CAPESP500&api_key={fred_key}&file_type=json"
-    resp = requests.get(url)
-    cape_data = resp.json()['observations'][-1]
+    url_cape = f"https://api.stlouisfed.org/fred/series/observations?series_id=CAPESP500&api_key={fred_key}&file_type=json"
+    cape_data = requests.get(url_cape).json()['observations'][-1]
     cape = float(cape_data['value'])
     cape_date = cape_data['date']
 except:
@@ -130,14 +139,14 @@ except:
     cape_date = None
 
 # Ampelstatus
-status = lamp_status(spread_val, vix, hy_bps, cape)
+status = lamp_status(latest_spread, vix, hy_bps, cape)
 
 # -------------------
 # JSON speichern
 # -------------------
 out = {
     'timestamp_utc': dt.datetime.utcnow().isoformat(),
-    'spread': {'value': spread_val, 'date': spread_date},
+    'spread': {'value': latest_spread, 'date': latest_date, 'history': spread_history},
     'vix': {'value': vix, 'date': vix_date},
     'high_yield_bps': {'value': hy_bps, 'date': hy_date},
     'shiller_cape': {'value': cape, 'date': cape_date},

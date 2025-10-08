@@ -1,4 +1,4 @@
-# scripts/fetch_data_full.py
+# scripts/fetch_data.py
 import os
 import json
 import datetime as dt
@@ -7,107 +7,140 @@ import yfinance as yf
 import pandas as pd
 
 OUTFILE = 'data/data.json'
-fred_key = os.environ.get("FRED_API_KEY")
-END_DATE = dt.date.today()
-START_DATE = END_DATE - dt.timedelta(days=3*365)  # 3 Jahre
 
 # -------------------
-# Hilfsfunktion Ampel
+# Hilfsfunktion für Ampel
 # -------------------
 def lamp_status(spread_val, vix, hy_bps, cape):
     s = {}
-    # VIX
-    if vix is None: s['vix']='unknown'
-    elif vix<20: s['vix']='green'
-    elif vix<=30: s['vix']='yellow'
-    else: s['vix']='red'
-    # HY
-    if hy_bps is None: s['hy']='unknown'
-    elif hy_bps<350: s['hy']='green'
-    elif hy_bps<=500: s['hy']='yellow'
-    else: s['hy']='red'
-    # CAPE
-    if cape is None: s['cape']='unknown'
-    elif cape<30: s['cape']='green'
-    elif cape<=35: s['cape']='yellow'
-    else: s['cape']='red'
-    # Spread
-    if spread_val is None: s['spread']='unknown'
-    elif spread_val<100: s['spread']='green'
-    elif spread_val<=200: s['spread']='yellow'
-    else: s['spread']='red'
-    # Overall
+
+    # VIX Ampel: <20 Grün, 20-30 Gelb, >30 Rot
+    try:
+        if vix is None:
+            s['vix'] = 'unknown'
+        elif vix < 20:
+            s['vix'] = 'green'
+        elif vix <= 30:
+            s['vix'] = 'yellow'
+        else:
+            s['vix'] = 'red'
+    except:
+        s['vix'] = 'unknown'
+
+    # HY Ampel: <350bp Grün, 350-500 Gelb, >500 Rot
+    try:
+        if hy_bps is None:
+            s['hy'] = 'unknown'
+        elif hy_bps < 350:
+            s['hy'] = 'green'
+        elif hy_bps <= 500:
+            s['hy'] = 'yellow'
+        else:
+            s['hy'] = 'red'
+    except:
+        s['hy'] = 'unknown'
+
+    # CAPE Ampel: <30 Grün, 30-35 Gelb, >35 Rot
+    try:
+        if cape is None:
+            s['cape'] = 'unknown'
+        elif cape < 30:
+            s['cape'] = 'green'
+        elif cape <= 35:
+            s['cape'] = 'yellow'
+        else:
+            s['cape'] = 'red'
+    except:
+        s['cape'] = 'unknown'
+
+    # Spread Ampel: <100bp Grün, 100-200bp Gelb, >200bp Rot
+    try:
+        if spread_val is None:
+            s['spread'] = 'unknown'
+        elif spread_val < 100:
+            s['spread'] = 'green'
+        elif spread_val <= 200:
+            s['spread'] = 'yellow'
+        else:
+            s['spread'] = 'red'
+    except:
+        s['spread'] = 'unknown'
+
+    # Gesamte Ampel
     colors = list(s.values())
     reds = colors.count('red')
     yellows = colors.count('yellow')
-    overall = 'green'
-    if reds>=3: overall='red'
-    elif reds>=1 and (reds+yellows)>=2: overall='yellow'
-    s['overall']=overall
+    if reds >= 3:
+        overall = 'red'
+    elif reds >= 1 and (reds + yellows) >= 2:
+        overall = 'yellow'
+    else:
+        overall = 'green'
+
+    s['overall'] = overall
     return s
 
 # -------------------
-# FRED-Historie abrufen
+# Daten holen
 # -------------------
-def fetch_fred_history(series_id):
-    url = f"https://api.stlouisfed.org/fred/series/observations"
-    params = {
-        "series_id": series_id,
-        "api_key": fred_key,
-        "file_type": "json",
-        "observation_start": START_DATE.isoformat(),
-        "observation_end": END_DATE.isoformat()
-    }
-    resp = requests.get(url, params=params)
-    obs = resp.json().get('observations', [])
-    history = []
-    for o in obs:
-        try:
-            value = float(o['value'])
-            history.append({'date': o['date'], 'value': value})
-        except:
-            continue
-    last = history[-1] if history else {'date': None, 'value': None}
-    return last['value'], last['date'], history
 
-# -------------------
-# Spread (10y-2y)
-# -------------------
-spread_val, spread_date, spread_hist = fetch_fred_history('T10Y2Y')
+# FRED API Key aus Secret
+fred_key = os.environ.get("FRED_API_KEY")
 
-# -------------------
-# High Yield Spread
-# -------------------
-hy_val, hy_date, hy_hist = fetch_fred_history('BAMLH0A0HYM2')
+# 1. US 10y-2y Spread (GS10 - GS2)
+try:
+    url = f"https://api.stlouisfed.org/fred/series/observations?series_id=T10Y2Y&api_key={fred_key}&file_type=json"
+    resp = requests.get(url)
+    data_spread = resp.json()['observations'][-1]
+    spread_val = float(data_spread['value'])
+    spread_date = data_spread['date']
+except:
+    spread_val = None
+    spread_date = None
 
-# -------------------
-# Shiller CAPE
-# -------------------
-cape_val, cape_date, cape_hist = fetch_fred_history('CAPESP500')
+# 2. VIX
+try:
+    vix_data = yf.Ticker('^VIX').history(period='1d')
+    vix = vix_data['Close'].iloc[-1]
+    vix_date = str(vix_data.index[-1].date())
+except:
+    vix = None
+    vix_date = None
 
-# -------------------
-# VIX (Yahoo Finance)
-# -------------------
-vix_data = yf.Ticker('^VIX').history(start=START_DATE, end=END_DATE)
-vix_data = vix_data['Close'].dropna()
-vix_hist = [{'date': str(d.date()), 'value': float(v)} for d,v in zip(vix_data.index, vix_data.values)]
-vix_val = vix_hist[-1]['value'] if vix_hist else None
-vix_date = vix_hist[-1]['date'] if vix_hist else None
+# 3. High Yield Spread (BofA US HY Option-Adjusted Spread)
+try:
+    url = f"https://api.stlouisfed.org/fred/series/observations?series_id=BAMLH0A0HYM2&api_key={fred_key}&file_type=json"
+    resp = requests.get(url)
+    hy_data = resp.json()['observations'][-1]
+    hy_bps = float(hy_data['value'])
+    hy_date = hy_data['date']
+except:
+    hy_bps = None
+    hy_date = None
 
-# -------------------
+# 4. Shiller CAPE (S&P500)
+try:
+    url = f"https://api.stlouisfed.org/fred/series/observations?series_id=CAPESP500&api_key={fred_key}&file_type=json"
+    resp = requests.get(url)
+    cape_data = resp.json()['observations'][-1]
+    cape = float(cape_data['value'])
+    cape_date = cape_data['date']
+except:
+    cape = None
+    cape_date = None
+
 # Ampelstatus
-# -------------------
-status = lamp_status(spread_val, vix_val, hy_val, cape_val)
+status = lamp_status(spread_val, vix, hy_bps, cape)
 
 # -------------------
 # JSON speichern
 # -------------------
 out = {
     'timestamp_utc': dt.datetime.utcnow().isoformat(),
-    'spread': {'value': spread_val, 'date': spread_date, 'history': spread_hist},
-    'vix': {'value': vix_val, 'date': vix_date, 'history': vix_hist},
-    'high_yield_bps': {'value': hy_val, 'date': hy_date, 'history': hy_hist},
-    'shiller_cape': {'value': cape_val, 'date': cape_date, 'history': cape_hist},
+    'spread': {'value': spread_val, 'date': spread_date},
+    'vix': {'value': vix, 'date': vix_date},
+    'high_yield_bps': {'value': hy_bps, 'date': hy_date},
+    'shiller_cape': {'value': cape, 'date': cape_date},
     'status': status
 }
 

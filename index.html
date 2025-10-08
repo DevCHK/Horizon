@@ -96,6 +96,19 @@ async function loadData() {
       return '→';
     }
 
+       // Übersetzung von Ampelfarben in Text
+      function overallText(status) {
+        switch(status) {
+          case 'green': return 'stabil';
+          case 'yellow': return 'vorsichtig';
+          case 'red': return 'kritisch';
+          default: return '–';
+        }
+  }
+    // Anzeige der Gesamteinschätzung
+    document.getElementById('overall').textContent = overallText(data.status?.overall);
+    document.getElementById('overall').style.color = colorize(data.status?.overall);
+
     // Spread
     document.getElementById('spread').textContent =
       `${data.spread?.value ?? '–'} ${trendSymbol(data.spread?.value, data.previous?.spread?.value)}`;

@@ -1,4 +1,15 @@
 # scripts/fetch_data.py
+import os
+import requests
+
+fred_key = os.environ.get("FRED_API_KEY")
+
+url = f"https://api.stlouisfed.org/fred/series/observations?series_id=SP500&api_key={fred_key}&file_type=json"
+resp = requests.get(url)
+data = resp.json()
+
+print(data)  # optional: zeigt die Rohdaten, zum Testen
+
 
 
 # VIX: <20 Grün, 20-30 Gelb, >30 Rot

@@ -1,26 +1,59 @@
 {
-  "timestamp_utc": "2025-10-08T12:46:37.994794",
+  "timestamp_utc": "2025-10-08T13:25:00Z",
   "spread": {
-    "value": 0.57,
-    "date": "2025-10-07"
+    "value": 0.45,
+    "date": "2025-10-07",
+    "history": [
+      {"date": "2025-10-01", "value": 0.60},
+      {"date": "2025-10-02", "value": 0.58},
+      {"date": "2025-10-03", "value": 0.55},
+      {"date": "2025-10-04", "value": 0.52},
+      {"date": "2025-10-05", "value": 0.50},
+      {"date": "2025-10-06", "value": 0.48},
+      {"date": "2025-10-07", "value": 0.45}
+    ]
   },
   "vix": {
-    "value": 17.1200008392334,
-    "date": "2025-10-08"
+    "value": 18,
+    "date": "2025-10-08",
+    "history": [
+      {"date": "2025-10-01", "value": 20},
+      {"date": "2025-10-02", "value": 19.5},
+      {"date": "2025-10-03", "value": 19},
+      {"date": "2025-10-04", "value": 18.7},
+      {"date": "2025-10-05", "value": 18.5},
+      {"date": "2025-10-06", "value": 18.2},
+      {"date": "2025-10-07", "value": 18}
+    ]
   },
   "high_yield_bps": {
-    "value": 2.76,
-    "date": "2025-10-06"
+    "value": 360,
+    "date": "2025-10-06",
+    "history": [
+      {"date": "2025-10-01", "value": 350},
+      {"date": "2025-10-02", "value": 352},
+      {"date": "2025-10-03", "value": 355},
+      {"date": "2025-10-04", "value": 357},
+      {"date": "2025-10-05", "value": 358},
+      {"date": "2025-10-06", "value": 360}
+    ]
   },
   "shiller_cape": {
-    "value": null,
-    "date": null
+    "value": 32,
+    "date": "2025-10-05",
+    "history": [
+      {"date": "2025-10-01", "value": 30.5},
+      {"date": "2025-10-02", "value": 30.8},
+      {"date": "2025-10-03", "value": 31},
+      {"date": "2025-10-04", "value": 31.5},
+      {"date": "2025-10-05", "value": 32}
+    ]
   },
   "status": {
+    "spread": "yellow",
     "vix": "green",
-    "hy": "green",
-    "cape": "unknown",
-    "spread": "green",
-    "overall": "green"
+    "hy": "yellow",
+    "cape": "yellow",
+    "overall": "yellow"
   }
 }

@@ -119,29 +119,22 @@ async function loadData() {
     }
 
     // Werte anzeigen mit Trend
-   document.getElementById('spread').textContent =
-  ${data.spread?.value ?? '–'};
+document.getElementById('spread').textContent = data.spread?.value ?? '–';
 document.getElementById('spread').style.color = colorize(data.status?.spread);
-document.getElementById('spread-date').textContent =
-  data.spread?.date ? Datenstand: ${data.spread.date} : '';
-  
-document.getElementById('vix').textContent =
-  ${data.vix?.value ?? '–'};
+document.getElementById('spread-date').textContent = data.spread?.date ? `Datenstand: ${data.spread.date}` : '';
+
+document.getElementById('vix').textContent = data.vix?.value ?? '–';
 document.getElementById('vix').style.color = colorize(data.status?.vix);
-document.getElementById('vix-date').textContent =
-  data.vix?.date ? Datenstand: ${data.vix.date} : '';
+document.getElementById('vix-date').textContent = data.vix?.date ? `Datenstand: ${data.vix.date}` : '';
 
-document.getElementById('hy').textContent =
-  ${data.high_yield_bps?.value ?? '–'};
+document.getElementById('hy').textContent = data.high_yield_bps?.value ?? '–';
 document.getElementById('hy').style.color = colorize(data.status?.hy);
-document.getElementById('hy-date').textContent =
-  data.high_yield_bps?.date ? Datenstand: ${data.high_yield_bps.date} : '';
+document.getElementById('hy-date').textContent = data.high_yield_bps?.date ? `Datenstand: ${data.high_yield_bps.date}` : '';
 
-document.getElementById('cape').textContent =
-  ${data.shiller_cape?.value ?? '–'};
+document.getElementById('cape').textContent = data.shiller_cape?.value ?? '–';
 document.getElementById('cape').style.color = colorize(data.status?.cape);
-document.getElementById('cape-date').textContent =
-  data.shiller_cape?.date ? Datenstand: ${data.shiller_cape.date} : '';
+document.getElementById('cape-date').textContent = data.shiller_cape?.date ? `Datenstand: ${data.shiller_cape.date}` : '';
+
 
 
   } catch(e) {

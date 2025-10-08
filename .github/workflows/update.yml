@@ -30,7 +30,7 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: |
           python scripts/fetch_data.py
-          
+
       - name: Commit and push data
         env:
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
@@ -40,7 +40,8 @@ jobs:
           git add data/data.json || true
           if ! git diff --quiet --cached; then
             git commit -m "daily data update: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            git push https://$PAT_TOKEN@github.com/${{ github.repository }} HEAD:main
+            git remote set-url origin https://$PAT_TOKEN@github.com/${{ github.repository }}
+            git push origin main
           else
             echo 'No changes to commit'
           fi

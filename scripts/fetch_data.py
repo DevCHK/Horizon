@@ -70,23 +70,34 @@ vix = fetch_yf('^VIX')
 hy = fetch_yf('BAMLH0A0HYM2')  # Optional: ersetzen, wenn BofA HY Spread via Yahoo nicht verfügbar
 
 # CAPE über multpl.com
+# CAPE über multpl.com
 def fetch_cape():
     try:
         url = "https://www.multpl.com/shiller-pe"
         response = requests.get(url)
+        response.raise_for_status()  # sicherstellen, dass die Seite geladen wurde
         soup = BeautifulSoup(response.content, 'html.parser')
-        cape_value = soup.find('div', class_='value').text.strip()
-        cape_change = soup.find('div', class_='change').text.strip()
+        
+        # Das div mit id="current" auswählen
+        div = soup.find('div', id='current')
+        if div is None or len(div.contents) < 3:
+            raise ValueError("CAPE-Wert nicht gefunden")
+        
+        # Den Wert extrahieren (childNodes[2] entspricht contents[2] in BeautifulSoup)
+        cape_value = div.contents[2].strip()
+        cape_value = float(cape_value)
+
+        # Datum der Abfrage
+        cape_date = str(dt.datetime.utcnow().date())
+        
         return {
-            "value": float(cape_value.replace(',', '')),
-            "change": cape_change,
-            "date": str(dt.datetime.utcnow().date())
+            "value": cape_value,
+            "date": cape_date
         }
     except Exception as e:
         print("Fehler beim Abrufen des CAPE-Werts:", e)
         return {
             "value": None,
-            "change": None,
             "date": None
         }
 

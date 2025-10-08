@@ -134,9 +134,10 @@ async function loadData() {
     document.getElementById('overall').textContent = data.status?.overall ?? '–';
     document.getElementById('overall').style.color = colorize(data.status?.overall);
 
-    document.getElementById('last-updated').textContent =
-      `Letzte Aktualisierung: ${data.timestamp_utc}`;
+    document.getElementById('cape').textContent =
+    `${data.shiller_cape?.value ?? '–'}`;
     document.getElementById('cape').style.color = colorize(data.status?.cape);
+
 
   } catch(e) {
     document.getElementById('last-updated').textContent =

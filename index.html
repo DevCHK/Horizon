@@ -1,104 +1,98 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="auto">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risikoanalyse Dashboard</title>
 <style>
+  /* Grundfarben für Light/Dark Mode */
+  :root {
+    --bg: #ffffff;
+    --text: #111111;
+    --card-bg: #f0f0f0;
+    --card-shadow: rgba(0,0,0,0.1);
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #f87171;
+    --gray-text: #6b7280;
+  }
+  [data-theme="dark"] {
+    --bg: #111111;
+    --text: #f0f0f0;
+    --card-bg: #1f1f1f;
+    --card-shadow: rgba(0,0,0,0.5);
+    --gray-text: #9ca3af;
+  }
+
   body {
-    font-family: "Inter", sans-serif;
-    background-color: #f4f4f5;
-    color: #111827;
-    margin: 0;
-    padding: 2rem;
+    margin:0;
+    font-family:sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    padding: 1rem;
   }
 
   h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
-    margin-bottom: 2rem;
+    font-size:1.5rem;
+    margin-bottom:1rem;
   }
 
   .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-    max-width: 1000px;
+    display:grid;
+    gap:1rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media(min-width:600px) {
+    .grid { grid-template-columns: 1fr 1fr; }
   }
 
   .card {
-    background-color: #ffffff;
-    border: 1px solid #d1d5db;
-    padding: 1rem;
-    border-radius: 0; /* eckig */
-    display: flex;
-    flex-direction: column;
-  }
-
-  .card-title {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
+    background-color: var(--card-bg);
+    padding:1rem;
+    border-radius:1rem;
+    box-shadow:0 4px 6px var(--card-shadow);
   }
 
   .value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .trend {
-    font-size: 0.9rem;
-    color: #6b7280;
+    font-size:1.25rem;
+    font-weight:bold;
   }
 
   .description {
-    font-size: 0.85rem;
-    color: #6b7280;
-    line-height: 1.3;
-  }
-
-  .update-info {
-    margin-top: 1.5rem;
-    font-size: 0.85rem;
-    color: #374151;
+    font-size:0.875rem;
+    color: var(--gray-text);
   }
 </style>
 </head>
 <body>
-
-<h1>Risikoanalyse Dashboard</h1>
-
+<h1>📊 Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
-    <div class="card-title">Spread (10y-2y)</div>
-    <div id="spread" class="value">– <span class="trend"></span></div>
-    <div class="description">Grün < 0, Gelb 0–50, Rot > 50</div>
+    <div>Spread (10y-2y):</div>
+    <div id="spread" class="value">–</div>
+    <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
   </div>
-
   <div class="card">
-    <div class="card-title">VIX</div>
-    <div id="vix" class="value">– <span class="trend"></span></div>
-    <div class="description">Grün < 20, Gelb 20–30, Rot > 30</div>
+    <div>VIX:</div>
+    <div id="vix" class="value">–</div>
+    <div class="description">Marktvolatilität (höher = riskanter).</div>
   </div>
-
   <div class="card">
-    <div class="card-title">High Yield (bps)</div>
-    <div id="hy" class="value">– <span class="trend"></span></div>
-    <div class="description">Grün < 350, Gelb 350–500, Rot > 500</div>
+    <div>High Yield (bps):</div>
+    <div id="hy" class="value">–</div>
+    <div class="description">Risikoprämie für Hochzinsanleihen.</div>
   </div>
-
   <div class="card">
-    <div class="card-title">Shiller CAPE</div>
-    <div id="cape" class="value">– <span class="trend"></span></div>
-    <div class="description">Grün < 30, Gelb 30–35, Rot > 35</div>
+    <div>CAPE:</div>
+    <div id="cape" class="value">–</div>
+    <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
   </div>
-</div>
-
-<div class="update-info" id="update-info">
-  Letzte Aktualisierung: –
+  <div class="card" style="grid-column:1/-1">
+    <div>Gesamteinschätzung:</div>
+    <div id="overall" class="value">–</div>
+    <div class="description">Farbcode: Grün = stabil, Gelb = Achtung, Rot = kritisch.</div>
+  </div>
 </div>
 
 <script>
@@ -108,41 +102,39 @@ async function loadData() {
     const data = await res.json();
 
     function colorize(value) {
-      if(value === 'green') return '#22c55e';
-      if(value === 'yellow') return '#facc15';
-      if(value === 'red') return '#ef4444';
-      return '#111827';
+      if(value === 'green') return 'var(--green)';
+      if(value === 'yellow') return 'var(--yellow)';
+      if(value === 'red') return 'var(--red)';
+      return 'var(--text)';
     }
 
-    function trendSymbol(change){
-      if(change > 0) return '▲';
-      if(change < 0) return '▼';
-      return '';
-    }
+    // Werte anzeigen
+    document.getElementById('spread').textContent = data.spread?.value ?? '–';
+    document.getElementById('spread').style.color = colorize(data.status?.spread);
 
-    function updateCard(id, val, status, change) {
-      const el = document.getElementById(id);
-      el.textContent = val ?? '–';
-      el.style.color = colorize(status);
-      el.append(document.createElement('span')).textContent = trendSymbol(change);
-    }
+    document.getElementById('vix').textContent = data.vix?.value ?? '–';
+    document.getElementById('vix').style.color = colorize(data.status?.vix);
 
-    updateCard('spread', data.spread?.value, data.status?.spread, data.spread?.change);
-    updateCard('vix', data.vix?.value, data.status?.vix, data.vix?.change);
-    updateCard('hy', data.high_yield_bps?.value, data.status?.hy, data.high_yield_bps?.change);
-    updateCard('cape', data.shiller_cape?.value, data.status?.cape, data.shiller_cape?.change);
+    document.getElementById('hy').textContent = data.high_yield_bps?.value ?? '–';
+    document.getElementById('hy').style.color = colorize(data.status?.hy);
 
-    const info = `Letzte Aktualisierung: ${new Date(data.timestamp_utc).toLocaleString()} (Datenstand: Spread ${data.spread?.date}, VIX ${data.vix?.date}, HY ${data.high_yield_bps?.date}, CAPE ${data.shiller_cape?.date})`;
-    document.getElementById('update-info').textContent = info;
+    document.getElementById('cape').textContent = data.shiller_cape?.value ?? '–';
+    document.getElementById('cape').style.color = colorize(data.status?.cape);
+
+    document.getElementById('overall').textContent = data.status?.overall ?? '–';
+    document.getElementById('overall').style.color = colorize(data.status?.overall);
 
   } catch(e) {
     console.error('Fehler beim Laden der Daten', e);
-    document.getElementById('update-info').textContent = 'Fehler beim Laden der Daten';
   }
+}
+
+// Dark Mode automatisch nach System
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.documentElement.setAttribute('data-theme','dark');
 }
 
 loadData();
 </script>
-
 </body>
 </html>

@@ -12,24 +12,64 @@ OUTFILE = 'data/data.json'
 # Hilfsfunktion für Ampel
 # -------------------
 def lamp_status(spread_val, vix, hy_bps, cape):
+    """Bestimmt den Ampelstatus für jeden Indikator und die Gesamteinschätzung."""
+
     s = {}
-    s['vix'] = 'green' if vix is not None and vix < 20 else 'yellow' if vix is not None and vix <= 30 else 'red' if vix is not None else 'unknown'
-    s['hy'] = 'green' if hy_bps is not None and hy_bps < 350 else 'yellow' if hy_bps is not None and hy_bps <= 500 else 'red' if hy_bps is not None else 'unknown'
-    s['cape'] = 'green' if cape is not None and cape < 30 else 'yellow' if cape is not None and cape <= 35 else 'red' if cape is not None else 'unknown'
-    s['spread'] = 'green' if spread_val is not None and spread_val < 100 else 'yellow' if spread_val is not None and spread_val <= 200 else 'red' if spread_val is not None else 'unknown'
+
+    # VIX
+    if vix is None:
+        s['vix'] = 'unknown'
+    elif vix < 20:
+        s['vix'] = 'green'
+    elif vix <= 30:
+        s['vix'] = 'yellow'
+    else:
+        s['vix'] = 'red'
+
+    # High Yield Spread in Prozentpunkten
+    if hy_bps is None:
+        s['hy'] = 'unknown'
+    elif hy_bps < 3.5:
+        s['hy'] = 'green'
+    elif hy_bps <= 5.0:
+        s['hy'] = 'yellow'
+    else:
+        s['hy'] = 'red'
+
+    # CAPE
+    if cape is None:
+        s['cape'] = 'unknown'
+    elif cape < 30:
+        s['cape'] = 'green'
+    elif cape <= 35:
+        s['cape'] = 'yellow'
+    else:
+        s['cape'] = 'red'
+
+    # 10y-2y Spread (bps)
+    if spread_val is None:
+        s['spread'] = 'unknown'
+    elif spread_val > 100:
+        s['spread'] = 'green'
+    elif spread_val >= 0:
+        s['spread'] = 'yellow'
+    else:
+        s['spread'] = 'red'
 
     # Gesamteinschätzung
-    colors = list(s.values())
-    reds = colors.count('red')
-    yellows = colors.count('yellow')
-    if reds >= 3:
-        overall = 'red'
-    elif reds >= 1 and (reds + yellows) >= 2:
-        overall = 'yellow'
+    reds = sum(1 for v in s.values() if v == 'red')
+    yellows = sum(1 for v in s.values() if v == 'yellow')
+
+    if reds >= 2:
+        overall = 'red'  # mehrere kritische Indikatoren
+    elif reds == 1 or yellows >= 1:
+        overall = 'yellow'  # vorsichtig, mindestens ein Warnsignal
     else:
-        overall = 'green'
+        overall = 'green'  # alles stabil
+
     s['overall'] = overall
     return s
+
 
 # -------------------
 # Daten holen

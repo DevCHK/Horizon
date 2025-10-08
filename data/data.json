@@ -1,11 +1,11 @@
 {
-  "timestamp_utc": "2025-10-08T18:02:18.329868",
+  "timestamp_utc": "2025-10-08T18:17:47.446559",
   "spread": {
     "value": 0.57,
     "date": "2025-10-07"
   },
   "vix": {
-    "value": 16.459999084472656,
+    "value": 16.420000076293945,
     "prev_value": 17.239999771118164,
     "date": "2025-10-08"
   },
@@ -14,14 +14,13 @@
     "date": "2025-10-07"
   },
   "shiller_cape": {
-    "value": null,
-    "change": null,
-    "date": null
+    "value": 40.08,
+    "date": "2025-10-08"
   },
   "status": {
     "vix": "green",
     "hy": "green",
-    "cape": "unknown",
+    "cape": "red",
     "spread": "green",
     "overall": "green"
   }

@@ -5,17 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risikoanalyse Dashboard</title>
 <style>
+  :root {
+    --bg-light: #f8f9fa;
+    --bg-dark: #1e1e2f;
+    --card-light: #ffffff;
+    --card-dark: #2b2b3b;
+    --text-light: #111;
+    --text-dark: #e0e0e0;
+    --green: #22c55e;
+    --yellow: #facc15;
+    --red: #ef4444;
+    --shadow-light: rgba(0,0,0,0.1);
+    --shadow-dark: rgba(0,0,0,0.3);
+  }
+
+  html[data-theme='dark'] {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+  }
+
   body {
     margin: 0;
-    font-family: sans-serif;
-    background-color: #f8f9fa;
-    color: #111;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-light);
     padding: 1rem;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   h1 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     margin-bottom: 1rem;
+    text-align: center;
   }
 
   .grid {
@@ -29,25 +50,37 @@
   }
 
   .card {
-    background-color: #fff;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: var(--card-light);
+    padding: 1.2rem 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 10px var(--shadow-light);
+    transition: background-color 0.3s, box-shadow 0.3s;
+  }
+
+  html[data-theme='dark'] .card {
+    background-color: var(--card-dark);
+    box-shadow: 0 4px 10px var(--shadow-dark);
   }
 
   .value {
-    font-size: 1.25rem;
-    font-weight: bold;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
   }
 
   .description {
     font-size: 0.85rem;
-    color: #555;
+    color: #6b7280; /* Grauton für Text */
+    margin-top: 0.25rem;
   }
 
   .trend {
     font-size: 0.85rem;
     margin-left: 0.25rem;
+  }
+
+  .overall-card {
+    text-align: center;
   }
 </style>
 </head>
@@ -74,7 +107,7 @@
     <div id="cape" class="value">–</div>
     <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
   </div>
-  <div class="card" style="grid-column:1/-1">
+  <div class="card overall-card" style="grid-column:1/-1">
     <div>Gesamteinschätzung:</div>
     <div id="overall" class="value">–</div>
     <div class="description">Grün = stabil, Gelb = Achtung, Rot = kritisch.</div>
@@ -92,10 +125,10 @@ async function loadData() {
 
     // Farbe nach Ampelstatus
     function colorize(value) {
-      if(value === 'green') return '#4ade80';
-      if(value === 'yellow') return '#facc15';
-      if(value === 'red') return '#f87171';
-      return '#111';
+      if(value === 'green') return getComputedStyle(document.documentElement).getPropertyValue('--green');
+      if(value === 'yellow') return getComputedStyle(document.documentElement).getPropertyValue('--yellow');
+      if(value === 'red') return getComputedStyle(document.documentElement).getPropertyValue('--red');
+      return getComputedStyle(document.documentElement).getPropertyValue('--text-light');
     }
 
     // Trendpfeile
@@ -135,10 +168,16 @@ async function loadData() {
 }
 
 // Dark Mode automatisch nach System
-if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
-  document.documentElement.setAttribute('data-theme','dark');
+function setTheme() {
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
 }
-  
+
+// Theme beim Laden setzen
+setTheme();
+// Theme bei Änderung dynamisch anpassen
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setTheme);
+
 loadData();
 </script>
 </body>

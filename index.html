@@ -1,181 +1,67 @@
-<!DOCTYPE html>
-<html lang="de" data-theme="auto">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Risikoanalyse Dashboard</title>
-<style>
-  :root {
-    --bg: #f9fafb;
-    --text: #111827;
-    --card-bg: #ffffff;
-    --green: #22c55e;
-    --yellow: #facc15;
-    --red: #ef4444;
-    --gray-text: #6b7280;
-  }
-  [data-theme="dark"] {
-    --bg: #1f2937;
-    --text: #f9fafb;
-    --card-bg: #111827;
-    --gray-text: #9ca3af;
-  }
-
-  body {
-    margin:0;
-    font-family:"Inter", sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    padding: 2rem;
-  }
-
-  h1 {
-    font-size:1.8rem;
-    font-weight:600;
-    margin-bottom:2rem;
-    text-align:left;
-  }
-
-  .grid {
-    display:grid;
-    gap:1rem;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    max-width:1200px;
-    margin:0 auto;
-  }
-
-  .card {
-    background-color: var(--card-bg);
-    padding:1.25rem;
-    border:1px solid #d1d5db;
-    border-radius:0; /* eckig */
-    display:flex;
-    flex-direction:column;
-  }
-
-  .card-title {
-    font-size:1rem;
-    font-weight:600;
-    margin-bottom:0.5rem;
-  }
-
-  .value {
-    font-size:1.5rem;
-    font-weight:700;
-    margin-bottom:0.25rem;
-    display:flex;
-    align-items:center;
-    gap:0.25rem;
-  }
-
-  .trend {
-    font-size:0.9rem;
-  }
-
-  .description {
-    font-size:0.85rem;
-    color: var(--gray-text);
-    line-height:1.3;
-  }
-
-  .overall {
-    grid-column:1/-1;
-    text-align:center;
-    font-size:1.25rem;
-    border-top:2px solid #d1d5db;
-    margin-top:1rem;
-    padding-top:0.5rem;
-  }
-</style>
-</head>
-<body>
-<h1>Risikoanalyse Dashboard</h1>
+<!doctype html>
+<p id="updated">lade Daten...</p>
 <div class="grid">
-  <div class="card">
-    <div class="card-title">Spread (10y-2y)</div>
-    <div id="spread" class="value">– <span class="trend"></span></div>
-    <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">VIX</div>
-    <div id="vix" class="value">– <span class="trend"></span></div>
-    <div class="description">Marktvolatilität. Höher = riskanter, niedriger = stabil.</div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">High Yield (bps)</div>
-    <div id="hy" class="value">– <span class="trend"></span></div>
-    <div class="description">Risikoprämie für Hochzinsanleihen.</div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Shiller CAPE</div>
-    <div id="cape" class="value">– <span class="trend"></span></div>
-    <div class="description">Bewertungskennzahl für Aktienmärkte. Über 35 = teuer.</div>
-  </div>
-
-  <div class="card overall">
-    <div class="card-title">Gesamteinschätzung</div>
-    <div id="overall" class="value">–</div>
-    <div class="description">Grün = stabil, Gelb = Achtung, Rot = kritisch.</div>
-  </div>
+<div class="card">
+<h3>Zinskurve 10y-2y</h3>
+<div id="spread"></div>
 </div>
+<div class="card">
+<h3>VIX</h3>
+<div id="vix"></div>
+</div>
+<div class="card">
+<h3>High Yield Spread</h3>
+<div id="hy"></div>
+</div>
+<div class="card">
+<h3>Shiller CAPE</h3>
+<div id="cape"></div>
+</div>
+</div>
+<h2>Gesamtstatus: <span id="overall"></span></h2>
+
 
 <script>
-async function loadData() {
-  try {
-    const res = await fetch('data/data.json');
-    const data = await res.json();
+async function load(){
+try{
+const r = await fetch('data/data.json?t='+(Date.now()));
+if(!r.ok) throw new Error('fetch failed')
+const j = await r.json();
+document.getElementById('updated').textContent = 'Letzte Aktualisierung (UTC): '+j.timestamp_utc;
 
-    function colorize(value) {
-      if(value === 'green') return 'var(--green)';
-      if(value === 'yellow') return 'var(--yellow)';
-      if(value === 'red') return 'var(--red)';
-      return 'var(--text)';
-    }
 
-    function trendSymbol(change){
-      if(change > 0) return '▲';
-      if(change < 0) return '▼';
-      return '';
-    }
-
-    // Spread
-    document.getElementById('spread').textContent = data.spread?.value ?? '–';
-    document.getElementById('spread').style.color = colorize(data.status?.spread);
-    document.getElementById('spread').append(document.createElement('span')).textContent = trendSymbol(data.spread?.change ?? 0);
-
-    // VIX
-    document.getElementById('vix').textContent = data.vix?.value ?? '–';
-    document.getElementById('vix').style.color = colorize(data.status?.vix);
-    document.getElementById('vix').append(document.createElement('span')).textContent = trendSymbol(data.vix?.change ?? 0);
-
-    // High Yield
-    document.getElementById('hy').textContent = data.high_yield_bps?.value ?? '–';
-    document.getElementById('hy').style.color = colorize(data.status?.hy);
-    document.getElementById('hy').append(document.createElement('span')).textContent = trendSymbol(data.high_yield_bps?.change ?? 0);
-
-    // CAPE
-    document.getElementById('cape').textContent = data.shiller_cape?.value ?? '–';
-    document.getElementById('cape').style.color = colorize(data.status?.cape);
-    document.getElementById('cape').append(document.createElement('span')).textContent = trendSymbol(data.shiller_cape?.change ?? 0);
-
-    // Overall
-    document.getElementById('overall').textContent = data.status?.overall ?? '–';
-    document.getElementById('overall').style.color = colorize(data.status?.overall);
-
-  } catch(e) {
-    console.error('Fehler beim Laden der Daten', e);
-  }
+function render(id, val, date, status){
+const el = document.getElementById(id);
+const lamp = document.createElement('span');
+lamp.className = 'lamp '+(status || 'unknown');
+const text = document.createElement('span');
+text.textContent = (val===null||val===undefined)?'n.a.':val + ' (' + (date||'n.a.') + ')';
+el.innerHTML = '';
+el.appendChild(lamp);
+el.appendChild(text);
 }
 
-// Dark Mode automatisch
-if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
-  document.documentElement.setAttribute('data-theme','dark');
-}
 
-loadData();
+render('spread', j.spread.value, j.spread.date, j.status.spread);
+render('vix', j.vix.value, j.vix.date, j.status.vix);
+render('hy', j.high_yield_bps.value, j.high_yield_bps.date, j.status.hy);
+render('cape', j.shiller_cape.value, j.shiller_cape.date, j.status.cape);
+
+
+const ov = document.getElementById('overall');
+ov.textContent = j.status.overall.toUpperCase();
+ov.style.padding = '4px 8px';
+ov.style.borderRadius = '8px';
+if(j.status.overall==='green') ov.style.background='#16a34a';
+else if(j.status.overall==='yellow') ov.style.background='#f59e0b';
+else if(j.status.overall==='red') ov.style.background='#dc2626';
+else ov.style.background='#9ca3af';
+}catch(e){
+document.getElementById('updated').textContent = 'Fehler beim Laden der Daten';
+console.error(e);
+}
+}
+load();
 </script>
 </body>
 </html>

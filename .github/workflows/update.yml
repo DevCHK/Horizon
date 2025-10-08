@@ -1,9 +1,11 @@
 # .github/workflows/update.yml
 name: daily-update
+
 on:
-schedule:
-- cron: '0 12 * * *' # täglich 12:00 UTC
-workflow_dispatch: {}
+  schedule:
+    - cron: '0 12 * * *'   # täglich 12:00 UTC
+  workflow_dispatch: {}     # erlaubt manuelles Ausführen
+
 
 
 jobs:

@@ -1,10 +1,5 @@
 name: daily-update
 
-on:
-  schedule:
-    - cron: '0 12 * * *'
-  workflow_dispatch: {}
-
 jobs:
   update:
     runs-on: ubuntu-latest

@@ -19,14 +19,14 @@ def lamp_status(spread_val, vix, hy_bps, cape):
 
     # Gesamteinschätzung
     colors = list(s.values())
-    reds = colors.count('red')
-    yellows = colors.count('yellow')
+    reds = colors.count('Kritisch')
+    yellows = colors.count('Vorsicht')
     if reds >= 3:
-        overall = 'red'
+        overall = 'Kritisch'
     elif reds >= 1 and (reds + yellows) >= 2:
-        overall = 'yellow'
+        overall = 'Vorsicht'
     else:
-        overall = 'green'
+        overall = 'Stabil'
     s['overall'] = overall
     return s
 

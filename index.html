@@ -130,8 +130,9 @@ async function loadData() {
     document.getElementById('cape-date').textContent = `Abrufdatum: ${data.shiller_cape?.date ?? '–'}`;
 
     // Gesamteinschätzung
-    document.getElementById('overall').textContent = overallText(data.status?.overall);
+    document.getElementById('overall').textContent = data.status?.overall ?? '–';
     document.getElementById('overall').style.color = colorize(data.status?.overall);
+
 
     // Last updated
     document.getElementById('last-updated').textContent =

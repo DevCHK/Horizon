@@ -43,7 +43,7 @@
 <h1>Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
-    <h2>10-Year Treasury Constant Maturity Minus 2-Year Treasury Constant Maturity:</h2>
+    <h2>10-Year Treasury Minus 2-Year Treasury:</h2>
     <div id="spread" class="value">–</div>
     <div id="spread-date" class="description">–</div>
     <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
@@ -55,7 +55,7 @@
     <div class="description">Marktvolatilität (höher = riskanter).</div>
   </div>
   <div class="card">
-    <h2>ICE BofA US High Yield Index Option-Adjusted Spread:</h2>
+    <h2>ICE BofA US High Yield Index OAS:</h2>
     <div id="hy" class="value">–</div>
     <div id="hy-date" class="description">–</div>
     <div class="description">Risikoprämie für Hochzinsanleihen.</div>
@@ -69,7 +69,7 @@
   <div class="card" style="grid-column:1/-1">
     <h2>Gesamteinschätzung:</h2>
     <div id="overall" class="value">–</div>
-    <div class="description">Grün = stabil, Gelb = Achtung, Rot = kritisch.</div>
+    <div class="description">Grün = stabil, Gelb = vorsichtig, Rot = kritisch.</div>
   </div>
   <div class="card" style="grid-column:1/-1">
     <div id="last-updated" class="description"></div>
@@ -96,18 +96,14 @@ async function loadData() {
       return '→';
     }
 
-       // Übersetzung von Ampelfarben in Text
-      function overallText(status) {
-        switch(status) {
-          case 'green': return 'stabil';
-          case 'yellow': return 'vorsichtig';
-          case 'red': return 'kritisch';
-          default: return '–';
-        }
-  }
-    // Anzeige der Gesamteinschätzung
-    document.getElementById('overall').textContent = overallText(data.status?.overall);
-    document.getElementById('overall').style.color = colorize(data.status?.overall);
+    function overallText(status) {
+      switch(status) {
+        case 'green': return 'stabil';
+        case 'yellow': return 'vorsichtig';
+        case 'red': return 'kritisch';
+        default: return '–';
+      }
+    }
 
     // Spread
     document.getElementById('spread').textContent =
@@ -133,8 +129,8 @@ async function loadData() {
     document.getElementById('cape').style.color = colorize(data.status?.cape);
     document.getElementById('cape-date').textContent = `Abrufdatum: ${data.shiller_cape?.date ?? '–'}`;
 
-    // Overall
-    document.getElementById('overall').textContent = data.status?.overall ?? '–';
+    // Gesamteinschätzung
+    document.getElementById('overall').textContent = overallText(data.status?.overall);
     document.getElementById('overall').style.color = colorize(data.status?.overall);
 
     // Last updated

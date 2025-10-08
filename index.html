@@ -6,16 +6,18 @@
 <title>Risikoanalyse Dashboard</title>
 <style>
   :root {
-    --bg-light: #f8f9fa;
+    --bg-light: #f4f5f7;
     --bg-dark: #1e1e2f;
     --card-light: #ffffff;
     --card-dark: #2b2b3b;
     --text-light: #111;
     --text-dark: #e0e0e0;
+    --desc-light: #555;
+    --desc-dark: #aaa;
     --green: #22c55e;
     --yellow: #facc15;
     --red: #ef4444;
-    --shadow-light: rgba(0,0,0,0.1);
+    --shadow-light: rgba(0,0,0,0.08);
     --shadow-dark: rgba(0,0,0,0.3);
   }
 
@@ -34,7 +36,7 @@
   }
 
   h1 {
-    font-size: 1.75rem;
+    font-size: 1.8rem;
     margin-bottom: 1rem;
     text-align: center;
   }
@@ -51,32 +53,31 @@
 
   .card {
     background-color: var(--card-light);
-    padding: 1.2rem 1rem;
+    padding: 1.2rem;
     border-radius: 0.75rem;
-    box-shadow: 0 4px 10px var(--shadow-light);
-    transition: background-color 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 12px var(--shadow-light);
+    transition: background-color 0.3s, box-shadow 0.3s, color 0.3s;
   }
 
   html[data-theme='dark'] .card {
     background-color: var(--card-dark);
-    box-shadow: 0 4px 10px var(--shadow-dark);
+    box-shadow: 0 4px 12px var(--shadow-dark);
   }
 
   .value {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: 600;
     margin-top: 0.25rem;
   }
 
   .description {
     font-size: 0.85rem;
-    color: #6b7280; /* Grauton für Text */
     margin-top: 0.25rem;
+    color: var(--desc-light);
   }
 
-  .trend {
-    font-size: 0.85rem;
-    margin-left: 0.25rem;
+  html[data-theme='dark'] .description {
+    color: var(--desc-dark);
   }
 
   .overall-card {
@@ -123,7 +124,6 @@ async function loadData() {
     const res = await fetch('data/data.json');
     const data = await res.json();
 
-    // Farbe nach Ampelstatus
     function colorize(value) {
       if(value === 'green') return getComputedStyle(document.documentElement).getPropertyValue('--green');
       if(value === 'yellow') return getComputedStyle(document.documentElement).getPropertyValue('--yellow');
@@ -131,7 +131,6 @@ async function loadData() {
       return getComputedStyle(document.documentElement).getPropertyValue('--text-light');
     }
 
-    // Trendpfeile
     function trendSymbol(current, previous) {
       if(previous === undefined || previous === null) return '';
       if(current > previous) return '▲';
@@ -139,7 +138,7 @@ async function loadData() {
       return '→';
     }
 
-    // Werte anzeigen mit Trend
+    // Werte anzeigen
     document.getElementById('spread').textContent =
       `${data.spread?.value ?? '–'} ${trendSymbol(data.spread?.value, data.previous?.spread?.value)}`;
     document.getElementById('spread').style.color = colorize(data.status?.spread);
@@ -167,15 +166,13 @@ async function loadData() {
   }
 }
 
-// Dark Mode automatisch nach System
+// Dark Mode
 function setTheme() {
   const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
 }
 
-// Theme beim Laden setzen
 setTheme();
-// Theme bei Änderung dynamisch anpassen
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setTheme);
 
 loadData();

@@ -90,11 +90,11 @@ async function loadData() {
     }
 
     function trendSymbol(current, previous) {
-      if(previous === undefined || previous === null) return '';
-      if(current > previous) return '▲';
-      if(current < previous) return '▼';
-      return '→';
-    }
+  if(previous === undefined || previous === null || current === null) return '';
+  if(current > previous) return '▲';
+  if(current < previous) return '▼';
+  return '→';
+}
 
     function overallText(status) {
       switch(status) {
@@ -106,31 +106,32 @@ async function loadData() {
     }
 
     // Spread
-    document.getElementById('spread').textContent =
-      `${data.spread?.value ?? '–'} ${trendSymbol(data.spread?.value, data.previous?.spread?.value)}`;
-    document.getElementById('spread').style.color = colorize(data.status?.spread);
-    document.getElementById('spread-date').textContent = `Abrufdatum: ${data.spread?.date ?? '–'}`;
+const spreadVal = data.spread?.value ?? null;
+document.getElementById('spread').textContent =
+  spreadVal !== null ? `${spreadVal} ${trendSymbol(spreadVal, data.spread?.prev_value)}` : '–';
+document.getElementById('spread').style.color = colorize(data.status?.spread);
+document.getElementById('spread-date').textContent = `Abrufdatum: ${data.spread?.date ?? '–'}`;
 
-    // VIX
+// VIX
 const vixVal = data.vix?.value ?? null;
 document.getElementById('vix').textContent =
   vixVal !== null ? `${vixVal.toFixed(2)} ${trendSymbol(vixVal, data.vix?.prev_value)}` : '–';
 document.getElementById('vix').style.color = colorize(data.status?.vix);
 document.getElementById('vix-date').textContent = `Abrufdatum: ${data.vix?.date ?? '–'}`;
 
+// High Yield
+const hyVal = data.high_yield_bps?.value ?? null;
+document.getElementById('hy').textContent =
+  hyVal !== null ? `${hyVal} ${trendSymbol(hyVal, data.high_yield_bps?.prev_value)}` : '–';
+document.getElementById('hy').style.color = colorize(data.status?.hy);
+document.getElementById('hy-date').textContent = `Abrufdatum: ${data.high_yield_bps?.date ?? '–'}`;
 
-    // High Yield
-    document.getElementById('hy').textContent =
-      `${data.high_yield_bps?.value ?? '–'} ${trendSymbol(data.high_yield_bps?.value, data.previous?.high_yield_bps?.value)}`;
-    document.getElementById('hy').style.color = colorize(data.status?.hy);
-    document.getElementById('hy-date').textContent = `Abrufdatum: ${data.high_yield_bps?.date ?? '–'}`;
-
-    // CAPE
-    document.getElementById('cape').textContent =
-      `${data.shiller_cape?.value ?? '–'}`;
-    document.getElementById('cape').style.color = colorize(data.status?.cape);
-    document.getElementById('cape-date').textContent = `Abrufdatum: ${data.shiller_cape?.date ?? '–'}`;
-
+// CAPE
+const capeVal = data.shiller_cape?.value ?? null;
+document.getElementById('cape').textContent =
+  capeVal !== null ? `${capeVal} ${trendSymbol(capeVal, data.shiller_cape?.prev_value)}` : '–';
+document.getElementById('cape').style.color = colorize(data.status?.cape);
+document.getElementById('cape-date').textContent = `Abrufdatum: ${data.shiller_cape?.date ?? '–'}`;
 // Gesamteinschätzung
 const overallStatus = data.status?.overall; // "green", "yellow", "red"
 document.getElementById('overall').textContent = overallText(overallStatus); // zeigt "Stabil", "Vorsichtig", "Kritisch"

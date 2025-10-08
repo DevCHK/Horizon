@@ -129,10 +129,11 @@ async function loadData() {
     document.getElementById('cape').style.color = colorize(data.status?.cape);
     document.getElementById('cape-date').textContent = `Abrufdatum: ${data.shiller_cape?.date ?? '–'}`;
 
-    // Gesamteinschätzung
-    const overallStatus = data.status?.overall;
-    document.getElementById('overall').textContent = overallText(overallStatus);
-    document.getElementById('overall').style.color = colorize(overallStatus);
+// Gesamteinschätzung
+const overallStatus = data.status?.overall; // "green", "yellow", "red"
+document.getElementById('overall').textContent = overallText(overallStatus); // zeigt "Stabil", "Vorsichtig", "Kritisch"
+document.getElementById('overall').style.color = colorize(overallStatus); // zeigt die passende Farbe
+
 
 
     // Last updated

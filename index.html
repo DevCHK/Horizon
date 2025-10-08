@@ -1,64 +1,148 @@
-<!doctype html>
-<h3>Zinskurve 10y-2y</h3>
-<div id="spread"></div>
-</div>
-<div class="card">
-<h3>VIX</h3>
-<div id="vix"></div>
-</div>
-<div class="card">
-<h3>High Yield Spread</h3>
-<div id="hy"></div>
-</div>
-<div class="card">
-<h3>Shiller CAPE</h3>
-<div id="cape"></div>
-</div>
-</div>
-<h2>Gesamtstatus: <span id="overall"></span></h2>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risikoanalyse Dashboard</title>
+<style>
+  body {
+    font-family: "Inter", sans-serif;
+    background-color: #f4f4f5;
+    color: #111827;
+    margin: 0;
+    padding: 2rem;
+  }
 
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    max-width: 1000px;
+  }
+
+  .card {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    padding: 1rem;
+    border-radius: 0; /* eckig */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .trend {
+    font-size: 0.9rem;
+    color: #6b7280;
+  }
+
+  .description {
+    font-size: 0.85rem;
+    color: #6b7280;
+    line-height: 1.3;
+  }
+
+  .update-info {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: #374151;
+  }
+</style>
+</head>
+<body>
+
+<h1>Risikoanalyse Dashboard</h1>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-title">Spread (10y-2y)</div>
+    <div id="spread" class="value">– <span class="trend"></span></div>
+    <div class="description">Grün < 0, Gelb 0–50, Rot > 50</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">VIX</div>
+    <div id="vix" class="value">– <span class="trend"></span></div>
+    <div class="description">Grün < 20, Gelb 20–30, Rot > 30</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">High Yield (bps)</div>
+    <div id="hy" class="value">– <span class="trend"></span></div>
+    <div class="description">Grün < 350, Gelb 350–500, Rot > 500</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Shiller CAPE</div>
+    <div id="cape" class="value">– <span class="trend"></span></div>
+    <div class="description">Grün < 30, Gelb 30–35, Rot > 35</div>
+  </div>
+</div>
+
+<div class="update-info" id="update-info">
+  Letzte Aktualisierung: –
+</div>
 
 <script>
-async function load(){
-try{
-const r = await fetch('data/data.json?t='+(Date.now()));
-if(!r.ok) throw new Error('fetch failed')
-const j = await r.json();
-document.getElementById('updated').textContent = 'Letzte Aktualisierung (UTC): '+j.timestamp_utc;
+async function loadData() {
+  try {
+    const res = await fetch('data/data.json');
+    const data = await res.json();
 
+    function colorize(value) {
+      if(value === 'green') return '#22c55e';
+      if(value === 'yellow') return '#facc15';
+      if(value === 'red') return '#ef4444';
+      return '#111827';
+    }
 
-function render(id, val, date, status){
-const el = document.getElementById(id);
-const lamp = document.createElement('span');
-lamp.className = 'lamp '+(status || 'unknown');
-const text = document.createElement('span');
-text.textContent = (val===null||val===undefined)?'n.a.':val + ' (' + (date||'n.a.') + ')';
-el.innerHTML = '';
-el.appendChild(lamp);
-el.appendChild(text);
+    function trendSymbol(change){
+      if(change > 0) return '▲';
+      if(change < 0) return '▼';
+      return '';
+    }
+
+    function updateCard(id, val, status, change) {
+      const el = document.getElementById(id);
+      el.textContent = val ?? '–';
+      el.style.color = colorize(status);
+      el.append(document.createElement('span')).textContent = trendSymbol(change);
+    }
+
+    updateCard('spread', data.spread?.value, data.status?.spread, data.spread?.change);
+    updateCard('vix', data.vix?.value, data.status?.vix, data.vix?.change);
+    updateCard('hy', data.high_yield_bps?.value, data.status?.hy, data.high_yield_bps?.change);
+    updateCard('cape', data.shiller_cape?.value, data.status?.cape, data.shiller_cape?.change);
+
+    const info = `Letzte Aktualisierung: ${new Date(data.timestamp_utc).toLocaleString()} (Datenstand: Spread ${data.spread?.date}, VIX ${data.vix?.date}, HY ${data.high_yield_bps?.date}, CAPE ${data.shiller_cape?.date})`;
+    document.getElementById('update-info').textContent = info;
+
+  } catch(e) {
+    console.error('Fehler beim Laden der Daten', e);
+    document.getElementById('update-info').textContent = 'Fehler beim Laden der Daten';
+  }
 }
 
-
-render('spread', j.spread.value, j.spread.date, j.status.spread);
-render('vix', j.vix.value, j.vix.date, j.status.vix);
-render('hy', j.high_yield_bps.value, j.high_yield_bps.date, j.status.hy);
-render('cape', j.shiller_cape.value, j.shiller_cape.date, j.status.cape);
-
-
-const ov = document.getElementById('overall');
-ov.textContent = j.status.overall.toUpperCase();
-ov.style.padding = '4px 8px';
-ov.style.borderRadius = '8px';
-if(j.status.overall==='green') ov.style.background='#16a34a';
-else if(j.status.overall==='yellow') ov.style.background='#f59e0b';
-else if(j.status.overall==='red') ov.style.background='#dc2626';
-else ov.style.background='#9ca3af';
-}catch(e){
-document.getElementById('updated').textContent = 'Fehler beim Laden der Daten';
-console.error(e);
-}
-}
-load();
+loadData();
 </script>
+
 </body>
 </html>

@@ -24,69 +24,46 @@ body {
   padding: 1rem;
 }
 
-h1 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
+h1 { font-size: 1.5rem; margin-bottom: 1rem; }
 
-.grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr;
-}
+.grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+@media(min-width:600px) { .grid { grid-template-columns: 1fr 1fr; } }
 
-@media(min-width:600px) {
-  .grid { grid-template-columns: 1fr 1fr; }
-}
+.card { background-color: var(--card-bg); padding: 1rem; border-radius: 0.5rem; }
+.value { font-size: 1.25rem; font-weight: bold; }
+.description { font-size: 0.85rem; color: #555; }
 
-.card {
-  background-color: var(--card-bg);
-  padding: 1rem;
-  border-radius: 0.5rem;
-}
-
-.value {
-  font-size: 1.25rem;
-  font-weight: bold;
-}
-
-.description {
-  font-size: 0.85rem;
-  color: #555;
-}
-
-canvas {
-  margin-top: 0.5rem;
-}
+canvas { margin-top: 0.5rem; }
 </style>
+
+<!-- Chart.js + Adapter für Zeitachse -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@4.1.3/build/global/luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
 </head>
 <body>
+
 <h1>Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
     <div>Spread (10y-2y):</div>
     <div id="spread" class="value">–</div>
     <div class="description" id="spread-date"></div>
-   
   </div>
   <div class="card">
     <div>VIX:</div>
     <div id="vix" class="value">–</div>
     <div class="description" id="vix-date"></div>
-
   </div>
   <div class="card">
     <div>High Yield (bps):</div>
     <div id="hy" class="value">–</div>
     <div class="description" id="hy-date"></div>
-
   </div>
   <div class="card">
     <div>CAPE:</div>
     <div id="cape" class="value">–</div>
     <div class="description" id="cape-date"></div>
-   
   </div>
   <div class="card" style="grid-column:1/-1">
     <div>Gesamteinschätzung:</div>
@@ -97,7 +74,9 @@ canvas {
     <div id="last-updated" class="description"></div>
   </div>
 </div>
-<canvas id="combinedChart" style="margin-top:2rem"></canvas>
+
+<canvas id="combinedChart" height="400" style="margin-top:2rem"></canvas>
+
 <script>
 async function loadData() {
   try {
@@ -111,7 +90,7 @@ async function loadData() {
       return '#111';
     }
 
-    // Werte & Datenstand in Cards anzeigen
+    // Werte in Cards anzeigen
     document.getElementById('spread').textContent = data.spread?.value ?? '–';
     document.getElementById('spread').style.color = colorize(data.status?.spread);
     document.getElementById('spread-date').textContent = data.spread?.date ? `Datenstand: ${data.spread.date}` : '';
@@ -134,34 +113,35 @@ async function loadData() {
     document.getElementById('last-updated').textContent = `Letzte Aktualisierung: ${data.timestamp_utc}`;
 
     // -------------------
-    // Kombiniertes Chart
+    // Chart vorbereiten
     // -------------------
-    const datasets = [];
     const colors = { spread:'#4ade80', vix:'#f87171', hy:'#facc15', cape:'#3b82f6' };
-    ['spread','vix','high_yield_bps','shiller_cape'].forEach(key=>{
-      const history = data[key]?.history ?? [];
-      if(history.length>0){
-        datasets.push({
-          label:key,
-          data: history.map(d=>({x:d.date,y:d.value})),
-          borderColor: colors[key],
-          backgroundColor:'rgba(0,0,0,0)',
-          tension:0.3
-        });
-      }
+    const datasets = ['spread','vix','high_yield_bps','shiller_cape'].map(key => {
+      const hist = data[key]?.history ?? [];
+      return {
+        label: key,
+        data: hist.map(d => ({ x: d.date, y: d.value })),
+        borderColor: colors[key],
+        backgroundColor: 'rgba(0,0,0,0)',
+        tension: 0.3
+      };
     });
 
     new Chart(document.getElementById('combinedChart'), {
-      type:'line',
-      data:{datasets},
-      options:{
-        parsing:{xAxisKey:'x',yAxisKey:'y'},
-        responsive:true,
-        scales:{
-          x:{type:'time',time:{unit:'month'},title:{display:true,text:'Datum'}},
-          y:{title:{display:true,text:'Wert'}}
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        parsing: { xAxisKey:'x', yAxisKey:'y' },
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'day', tooltipFormat: 'yyyy-MM-dd' },
+            title: { display:true, text:'Datum' }
+          },
+          y: { title: { display:true, text:'Wert' } }
         },
-        plugins:{legend:{display:true,position:'top'}}
+        plugins: { legend:{ display:true, position:'top' } }
       }
     });
 

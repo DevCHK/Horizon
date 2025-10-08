@@ -62,31 +62,31 @@ canvas {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<h1>📊 Risikoanalyse Dashboard</h1>
+<h1>Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
     <div>Spread (10y-2y):</div>
     <div id="spread" class="value">–</div>
     <div class="description" id="spread-date"></div>
-    <canvas id="spreadChart"></canvas>
+   
   </div>
   <div class="card">
     <div>VIX:</div>
     <div id="vix" class="value">–</div>
     <div class="description" id="vix-date"></div>
-    <canvas id="vixChart"></canvas>
+
   </div>
   <div class="card">
     <div>High Yield (bps):</div>
     <div id="hy" class="value">–</div>
     <div class="description" id="hy-date"></div>
-    <canvas id="hyChart"></canvas>
+
   </div>
   <div class="card">
     <div>CAPE:</div>
     <div id="cape" class="value">–</div>
     <div class="description" id="cape-date"></div>
-    <canvas id="capeChart"></canvas>
+   
   </div>
   <div class="card" style="grid-column:1/-1">
     <div>Gesamteinschätzung:</div>
@@ -97,7 +97,7 @@ canvas {
     <div id="last-updated" class="description"></div>
   </div>
 </div>
-
+<canvas id="combinedChart"></canvas>
 <script>
 async function loadData() {
   try {
@@ -109,13 +109,6 @@ async function loadData() {
       if(value==='yellow') return '#facc15';
       if(value==='red') return '#f87171';
       return '#111';
-    }
-
-    function trendSymbol(current, previous) {
-      if(previous === undefined || previous === null) return '';
-      if(current > previous) return '▲';
-      if(current < previous) return '▼';
-      return '→';
     }
 
     // Werte & Datenstand anzeigen
@@ -141,37 +134,35 @@ async function loadData() {
     document.getElementById('last-updated').textContent = `Letzte Aktualisierung: ${data.timestamp_utc}`;
 
     // -------------------
-    // Charts
+    // Kombiniertes Chart
     // -------------------
-    const charts = [
-      {id:'spreadChart', values:data.spread?.history ?? [], color:'#4ade80', label:'Spread'},
-      {id:'vixChart', values:data.vix?.history ?? [], color:'#f87171', label:'VIX'},
-      {id:'hyChart', values:data.high_yield_bps?.history ?? [], color:'#facc15', label:'High Yield'},
-      {id:'capeChart', values:data.shiller_cape?.history ?? [], color:'#3b82f6', label:'CAPE'}
-    ];
+    const datasets = [];
+    const colors = { spread:'#4ade80', vix:'#f87171', hy:'#facc15', cape:'#3b82f6' };
 
-    charts.forEach(c=>{
-      if(c.values.length>0){
-        new Chart(document.getElementById(c.id), {
-          type:'line',
-          data:{
-            labels: c.values.map(d=>d.date),
-            datasets:[{
-              label:c.label,
-              data:c.values.map(d=>d.value),
-              borderColor:c.color,
-              backgroundColor:'rgba(0,0,0,0)',
-              tension:0.3
-            }]
-          },
-          options:{
-            responsive:true,
-            scales:{
-              x:{ display:true },
-              y:{ display:true }
-            }
-          }
+    ['spread','vix','high_yield_bps','shiller_cape'].forEach(key => {
+      const history = data[key]?.history ?? [];
+      if(history.length>0){
+        datasets.push({
+          label: key,
+          data: history.map(d => ({x:d.date, y:d.value})),
+          borderColor: colors[key] || '#111',
+          backgroundColor: 'rgba(0,0,0,0)',
+          tension: 0.3
         });
+      }
+    });
+
+    new Chart(document.getElementById('combinedChart'), {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        parsing: { xAxisKey:'x', yAxisKey:'y' },
+        scales: {
+          x: { type:'time', time:{unit:'month'}, title:{display:true, text:'Datum'} },
+          y: { title:{display:true, text:'Wert'} }
+        },
+        plugins: { legend:{display:true, position:'top'} }
       }
     });
 

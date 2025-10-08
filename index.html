@@ -127,7 +127,7 @@ async function loadData() {
     document.getElementById('hy').style.color = colorize(data.status?.hy);
 
     document.getElementById('cape').textContent =
-      `${data.shiller_cape?.value ?? '–'} ${trendSymbol(data.shiller_cape?.value, data.previous?.shiller_cape?.value)}`;
+      data.shiller_cape?.value ?? '–';
     document.getElementById('cape').style.color = colorize(data.status?.cape);
 
     document.getElementById('overall').textContent = data.status?.overall ?? '–';

@@ -143,6 +143,9 @@ document.getElementById('cape').style.color = colorize(data.status?.cape);
 document.getElementById('cape-date').textContent =
   data.shiller_cape?.date ? `Datenstand: ${data.shiller_cape.date}` : '';
 
+document.getElementById('last-updated').textContent =
+  `Letzte Aktualisierung: ${data.timestamp_utc}`;
+
 
   } catch(e) {
     console.error('Fehler beim Laden der Daten', e);

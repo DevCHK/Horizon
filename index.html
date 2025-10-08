@@ -4,169 +4,108 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risikoanalyse Dashboard</title>
-<link href="https://fonts.googleapis.com/css?family=Montserrat:700|Open+Sans:400,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <style>
-:root {
-  --bank-blue: #0a2650;
-  --bank-silver: #e9eef4;
-  --bank-gold: #d4af37;
-  --bank-turquoise: #009edc;
-  --bank-dark: #1c2234;
-  --card-bg: #fff;
-  --card-border: #cbd6e2;
-  --border-radius: 10px;
-  --text: #1c2234;
-  --description: #4c5a6a;
-  --positive: #009966;
-  --warning: #ffc107;
-  --negative: #d32f2f;
-}
-[data-theme="dark"] {
-  --card-bg: #1c2234;
-  --bank-silver: #222a36;
-  --text: #f2f4f7;
-  --description: #ccc;
-  --card-border: #33405b;
-}
-
-body {
-  margin: 0;
-  font-family: 'Open Sans', Arial, sans-serif;
-  background: linear-gradient(135deg, var(--bank-blue) 0%, var(--bank-silver) 100%);
-  color: var(--text);
-  padding: 2rem;
-  min-height: 100vh;
-}
-
-h1 {
-  font-family: 'Montserrat', Arial, sans-serif;
-  font-size: 2rem;
-  color: var(--bank-blue);
-  margin-bottom: 2rem;
-  text-align: center;
-  letter-spacing: 1px;
-}
-
-.grid {
-  display: grid;
-  gap: 2rem;
-  grid-template-columns: 1fr;
-  max-width: 900px;
-  margin: 0 auto;
-}
-@media(min-width:700px) {
-  .grid { grid-template-columns: 1fr 1fr; }
-}
-.card {
-  background-color: var(--card-bg);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--card-border);
-  box-shadow: 0 2px 12px rgba(10,38,80,0.06);
-  padding: 1.7rem 1.5rem 1.2rem 1.5rem;
-  margin-bottom: 1rem;
-  position: relative;
-}
-.card h2 {
-  font-family: 'Montserrat', Arial, sans-serif;
-  font-size: 1.08rem;
-  color: var(--bank-blue);
-  margin-bottom: 0.7rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  font-weight: 700;
-}
-.value {
-  font-size: 1.65rem;
-  font-weight: bold;
-  color: var(--text);
-  margin-bottom: 0.2rem;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
-}
-.trend {
-  font-size: 1.05rem;
-  margin-left: 0.5rem;
-}
-.description {
-  font-size: 0.93rem;
-  color: var(--description);
-  margin-bottom: 0.15rem;
-}
-.date {
-  font-size: 0.83rem;
-  color: var(--bank-blue);
-  font-style: italic;
-}
-.ampel {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-left: 0.6em;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.07);
-  border: 1px solid #eee;
-}
-.ampel.green { background: var(--positive); }
-.ampel.yellow { background: var(--warning);}
-.ampel.red { background: var(--negative);}
-@media (max-width: 500px) {
-  .grid { gap: 1rem; }
-  .card { padding: 1rem; }
-}
+  /* Grundfarben für Light/Dark Mode */
+  :root {
+    --bg: #f8f9fa;
+    --text: #111;
+    --card-bg: #fff;
+    --description: #555;
+  }
+  [data-theme="dark"] {
+    --bg: #111;
+    --text: #f0f0f0;
+    --card-bg: #1f1f1f;
+    --description: #bbb;
+  }
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    padding: 1rem;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+  @media(min-width:600px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+  }
+  .card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .value {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+  .description {
+    font-size: 0.85rem;
+    color: var(--description);
+  }
+  .trend {
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+  }
 </style>
 </head>
 <body>
-<h1><i class="fas fa-university"></i> Risikoanalyse Dashboard</h1>
+<h1>Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
-    <h2><i class="fas fa-chart-line"></i> Spread (10y-2y):</h2>
-    <div class="value"><span id="spread"></span> <span id="spread-trend" class="trend"></span> <span id="spread-status" class="ampel"></span></div>
+    <h2>Spread (10y-2y):</h2>
+    <div id="spread" class="value">–</div>
     <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
-    <div id="spread-date" class="date"></div>
   </div>
   <div class="card">
-    <h2><i class="fas fa-wave-square"></i> VIX:</h2>
-    <div class="value"><span id="vix"></span> <span id="vix-trend" class="trend"></span> <span id="vix-status" class="ampel"></span></div>
+    <h2>VIX:</h2>
+    <div id="vix" class="value">–</div>
     <div class="description">Marktvolatilität (höher = riskanter).</div>
-    <div id="vix-date" class="date"></div>
   </div>
   <div class="card">
-    <h2><i class="fas fa-money-bill-trend-up"></i> High Yield (bps):</h2>
-    <div class="value"><span id="hy"></span> <span id="hy-trend" class="trend"></span> <span id="hy-status" class="ampel"></span></div>
+    <h2>High Yield (bps):</h2>
+    <div id="hy" class="value">–</div>
     <div class="description">Risikoprämie für Hochzinsanleihen.</div>
-    <div id="hy-date" class="date"></div>
   </div>
   <div class="card">
-    <h2><i class="fas fa-chart-pie"></i> CAPE:</h2>
-    <div class="value"><span id="cape"></span> <span id="cape-trend" class="trend"></span> <span id="cape-status" class="ampel"></span></div>
+    <h2>CAPE:</h2>
+    <div id="cape" class="value">–</div>
     <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
-    <div id="cape-date" class="date"></div>
   </div>
   <div class="card" style="grid-column:1/-1">
-    <h2><i class="fas fa-balance-scale"></i> Gesamteinschätzung:</h2>
-    <div class="value"><span id="overall"></span> <span id="overall-status" class="ampel"></span></div>
+    <h2>Gesamteinschätzung:</h2>
+    <div id="overall" class="value">–</div>
     <div class="description">Grün = stabil, Gelb = Achtung, Rot = kritisch.</div>
   </div>
   <div class="card" style="grid-column:1/-1">
     <div id="last-updated" class="description"></div>
   </div>
 </div>
+
 <script>
 async function loadData() {
   try {
     const res = await fetch('data/data.json');
     const data = await res.json();
 
-    function ampelColor(status) {
-      if(status === 'green') return 'green';
-      if(status === 'yellow') return 'yellow';
-      if(status === 'red') return 'red';
-      return '';
+    // Farbe nach Ampelstatus
+    function colorize(value) {
+      if(value === 'green') return '#4ade80';
+      if(value === 'yellow') return '#facc15';
+      if(value === 'red') return '#f87171';
+      return 'var(--text)';
     }
+
+    // Trendpfeile
     function trendSymbol(current, previous) {
       if(previous === undefined || previous === null) return '';
       if(current > previous) return '▲';
@@ -174,46 +113,41 @@ async function loadData() {
       return '→';
     }
 
-    // Spread
-    document.getElementById('spread').textContent = data.spread?.value ?? '–';
-    document.getElementById('spread-trend').textContent = trendSymbol(data.spread?.value, data.previous?.spread?.value);
-    document.getElementById('spread-status').className = 'ampel ' + ampelColor(data.status?.spread);
-    document.getElementById('spread-date').textContent = data.spread?.date ? `Quelle: ${data.spread.date}` : '';
+    // Werte anzeigen mit Trend
+    document.getElementById('spread').textContent =
+      `${data.spread?.value ?? '–'} ${trendSymbol(data.spread?.value, data.previous?.spread?.value)}`;
+    document.getElementById('spread').style.color = colorize(data.status?.spread);
 
-    // VIX
-    document.getElementById('vix').textContent = data.vix?.value ?? '–';
-    document.getElementById('vix-trend').textContent = trendSymbol(data.vix?.value, data.previous?.vix?.value);
-    document.getElementById('vix-status').className = 'ampel ' + ampelColor(data.status?.vix);
-    document.getElementById('vix-date').textContent = data.vix?.date ? `Quelle: ${data.vix.date}` : '';
+    document.getElementById('vix').textContent =
+      `${data.vix?.value ?? '–'} ${trendSymbol(data.vix?.value, data.previous?.vix?.value)}`;
+    document.getElementById('vix').style.color = colorize(data.status?.vix);
 
-    // High Yield
-    document.getElementById('hy').textContent = data.high_yield_bps?.value ?? '–';
-    document.getElementById('hy-trend').textContent = trendSymbol(data.high_yield_bps?.value, data.previous?.high_yield_bps?.value);
-    document.getElementById('hy-status').className = 'ampel ' + ampelColor(data.status?.hy);
-    document.getElementById('hy-date').textContent = data.high_yield_bps?.date ? `Quelle: ${data.high_yield_bps.date}` : '';
+    document.getElementById('hy').textContent =
+      `${data.high_yield_bps?.value ?? '–'} ${trendSymbol(data.high_yield_bps?.value, data.previous?.high_yield_bps?.value)}`;
+    document.getElementById('hy').style.color = colorize(data.status?.hy);
 
-    // CAPE
-    document.getElementById('cape').textContent = data.shiller_cape?.value ?? '–';
-    document.getElementById('cape-trend').textContent = trendSymbol(data.shiller_cape?.value, data.previous?.shiller_cape?.value);
-    document.getElementById('cape-status').className = 'ampel ' + ampelColor(data.status?.cape);
-    document.getElementById('cape-date').textContent = data.shiller_cape?.date ? `Quelle: ${data.shiller_cape.date}` : '';
+    document.getElementById('cape').textContent =
+      `${data.shiller_cape?.value ?? '–'} ${trendSymbol(data.shiller_cape?.value, data.previous?.shiller_cape?.value)}`;
+    document.getElementById('cape').style.color = colorize(data.status?.cape);
 
-    // Gesamteinschätzung
     document.getElementById('overall').textContent = data.status?.overall ?? '–';
-    document.getElementById('overall-status').className = 'ampel ' + ampelColor(data.status?.overall);
+    document.getElementById('overall').style.color = colorize(data.status?.overall);
 
-    // Letzte Aktualisierung
     document.getElementById('last-updated').textContent =
       `Letzte Aktualisierung: ${data.timestamp_utc}`;
+
   } catch(e) {
     document.getElementById('last-updated').textContent =
       'Fehler beim Laden der Daten';
     console.error('Fehler beim Laden der Daten', e);
   }
 }
+
+// Dark Mode automatisch nach System
 if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
   document.documentElement.setAttribute('data-theme','dark');
 }
+  
 loadData();
 </script>
 </body>

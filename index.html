@@ -5,91 +5,126 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risikoanalyse Dashboard</title>
 <style>
-  /* Grundfarben für Light/Dark Mode */
+  /* Basisfarben */
   :root {
-    --bg: #ffffff;
-    --text: #111111;
-    --card-bg: #f0f0f0;
+    --bg: #f5f7fa;
+    --text: #1f2937;
+    --card-bg: #ffffff;
     --card-shadow: rgba(0,0,0,0.1);
-    --green: #4ade80;
+    --green: #22c55e;
     --yellow: #facc15;
-    --red: #f87171;
+    --red: #ef4444;
     --gray-text: #6b7280;
   }
   [data-theme="dark"] {
-    --bg: #111111;
-    --text: #f0f0f0;
-    --card-bg: #1f1f1f;
+    --bg: #111827;
+    --text: #f9fafb;
+    --card-bg: #1f2937;
     --card-shadow: rgba(0,0,0,0.5);
     --gray-text: #9ca3af;
   }
 
   body {
     margin:0;
-    font-family:sans-serif;
+    font-family: "Inter", sans-serif;
     background-color: var(--bg);
     color: var(--text);
-    padding: 1rem;
+    padding: 2rem 1rem;
   }
 
   h1 {
-    font-size:1.5rem;
-    margin-bottom:1rem;
+    font-size:2rem;
+    font-weight:700;
+    margin-bottom:2rem;
+    text-align:center;
+    color: var(--text);
   }
 
   .grid {
     display:grid;
-    gap:1rem;
+    gap:1.5rem;
     grid-template-columns: 1fr;
+    max-width:900px;
+    margin:0 auto;
   }
 
-  @media(min-width:600px) {
+  @media(min-width:700px) {
     .grid { grid-template-columns: 1fr 1fr; }
   }
 
   .card {
     background-color: var(--card-bg);
-    padding:1rem;
+    padding:1.5rem;
     border-radius:1rem;
-    box-shadow:0 4px 6px var(--card-shadow);
+    box-shadow: 0 6px 12px var(--card-shadow);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px var(--card-shadow);
+  }
+
+  .card-title {
+    font-size:1.1rem;
+    font-weight:600;
+    margin-bottom:0.5rem;
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
   }
 
   .value {
-    font-size:1.25rem;
-    font-weight:bold;
+    font-size:1.5rem;
+    font-weight:700;
+    margin-bottom:0.5rem;
   }
 
   .description {
     font-size:0.875rem;
     color: var(--gray-text);
+    line-height:1.3;
+  }
+
+  /* Gesamteinschätzung breiter */
+  .overall {
+    grid-column:1/-1;
+    text-align:center;
   }
 </style>
 </head>
 <body>
-<h1>Risikoanalyse Dashboard</h1>
+<h1>📊 Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
-    <div>Spread (10y-2y):</div>
+    <div class="card-title">💹 Spread (10y-2y)</div>
     <div id="spread" class="value">–</div>
-    <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
+    <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen. Negativ = Warnsignal.</div>
   </div>
+
   <div class="card">
-    <div>VIX:</div>
+    <div class="card-title">📈 VIX</div>
     <div id="vix" class="value">–</div>
-    <div class="description">Marktvolatilität (höher = riskanter).</div>
+    <div class="description">Marktvolatilität (je höher, desto riskanter). Niedrig = stabil.</div>
   </div>
+
   <div class="card">
-    <div>High Yield (bps):</div>
+    <div class="card-title">💰 High Yield (bps)</div>
     <div id="hy" class="value">–</div>
-    <div class="description">Risikoprämie für Hochzinsanleihen.</div>
+    <div class="description">Risikoprämie für Hochzinsanleihen. Höhere Werte = höhere Kreditrisiken.</div>
   </div>
+
   <div class="card">
-    <div>CAPE:</div>
+    <div class="card-title">🏦 Shiller CAPE</div>
     <div id="cape" class="value">–</div>
-    <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
+    <div class="description">Bewertungskennzahl für Aktien. Über 35 = historisch teuer.</div>
   </div>
-  <div class="card" style="grid-column:1/-1">
-    <div>Gesamteinschätzung:</div>
+
+  <div class="card overall">
+    <div class="card-title">📌 Gesamteinschätzung</div>
     <div id="overall" class="value">–</div>
     <div class="description">Farbcode: Grün = stabil, Gelb = Achtung, Rot = kritisch.</div>
   </div>
@@ -108,7 +143,6 @@ async function loadData() {
       return 'var(--text)';
     }
 
-    // Werte anzeigen
     document.getElementById('spread').textContent = data.spread?.value ?? '–';
     document.getElementById('spread').style.color = colorize(data.status?.spread);
 

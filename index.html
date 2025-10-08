@@ -5,83 +5,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risikoanalyse Dashboard</title>
 <style>
+  /* Grundfarben für Light/Dark Mode */
   :root {
-    --bg-light: #f4f5f7;
-    --bg-dark: #1e1e2f;
-    --card-light: #ffffff;
-    --card-dark: #2b2b3b;
-    --text-light: #111;
-    --text-dark: #e0e0e0;
-    --desc-light: #555;
-    --desc-dark: #aaa;
-    --green: #22c55e;
-    --yellow: #facc15;
-    --red: #ef4444;
-    --shadow-light: rgba(0,0,0,0.08);
-    --shadow-dark: rgba(0,0,0,0.3);
+    --bg: #f8f9fa;
+    --text: #111;
+    --card-bg: #fff;
+    --description: #555;
   }
-
-  html[data-theme='dark'] {
-    background-color: var(--bg-dark);
-    color: var(--text-dark);
+  [data-theme="dark"] {
+    --bg: #111;
+    --text: #f0f0f0;
+    --card-bg: #1f1f1f;
+    --description: #bbb;
   }
-
   body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: var(--bg-light);
-    color: var(--text-light);
+    font-family: sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
     padding: 1rem;
-    transition: background-color 0.3s, color 0.3s;
   }
-
   h1 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     margin-bottom: 1rem;
-    text-align: center;
   }
-
   .grid {
     display: grid;
     gap: 1rem;
     grid-template-columns: 1fr;
   }
-
   @media(min-width:600px) {
     .grid { grid-template-columns: 1fr 1fr; }
   }
-
   .card {
-    background-color: var(--card-light);
-    padding: 1.2rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 12px var(--shadow-light);
-    transition: background-color 0.3s, box-shadow 0.3s, color 0.3s;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 1rem;
+    margin-bottom: 1rem;
   }
-
-  html[data-theme='dark'] .card {
-    background-color: var(--card-dark);
-    box-shadow: 0 4px 12px var(--shadow-dark);
-  }
-
   .value {
-    font-size: 1.6rem;
-    font-weight: 600;
-    margin-top: 0.25rem;
+    font-size: 1.25rem;
+    font-weight: bold;
   }
-
   .description {
     font-size: 0.85rem;
-    margin-top: 0.25rem;
-    color: var(--desc-light);
+    color: var(--description);
   }
-
-  html[data-theme='dark'] .description {
-    color: var(--desc-dark);
-  }
-
-  .overall-card {
-    text-align: center;
+  .trend {
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
   }
 </style>
 </head>
@@ -89,27 +62,27 @@
 <h1>📊 Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
-    <div>Spread (10y-2y):</div>
+    <h2>Spread (10y-2y):</h2>
     <div id="spread" class="value">–</div>
     <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
   </div>
   <div class="card">
-    <div>VIX:</div>
+    <h2>VIX:</h2>
     <div id="vix" class="value">–</div>
     <div class="description">Marktvolatilität (höher = riskanter).</div>
   </div>
   <div class="card">
-    <div>High Yield (bps):</div>
+    <h2>High Yield (bps):</h2>
     <div id="hy" class="value">–</div>
     <div class="description">Risikoprämie für Hochzinsanleihen.</div>
   </div>
   <div class="card">
-    <div>CAPE:</div>
+    <h2>CAPE:</h2>
     <div id="cape" class="value">–</div>
     <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
   </div>
-  <div class="card overall-card" style="grid-column:1/-1">
-    <div>Gesamteinschätzung:</div>
+  <div class="card" style="grid-column:1/-1">
+    <h2>Gesamteinschätzung:</h2>
     <div id="overall" class="value">–</div>
     <div class="description">Grün = stabil, Gelb = Achtung, Rot = kritisch.</div>
   </div>
@@ -124,13 +97,15 @@ async function loadData() {
     const res = await fetch('data/data.json');
     const data = await res.json();
 
+    // Farbe nach Ampelstatus
     function colorize(value) {
-      if(value === 'green') return getComputedStyle(document.documentElement).getPropertyValue('--green');
-      if(value === 'yellow') return getComputedStyle(document.documentElement).getPropertyValue('--yellow');
-      if(value === 'red') return getComputedStyle(document.documentElement).getPropertyValue('--red');
-      return getComputedStyle(document.documentElement).getPropertyValue('--text-light');
+      if(value === 'green') return '#4ade80';
+      if(value === 'yellow') return '#facc15';
+      if(value === 'red') return '#f87171';
+      return 'var(--text)';
     }
 
+    // Trendpfeile
     function trendSymbol(current, previous) {
       if(previous === undefined || previous === null) return '';
       if(current > previous) return '▲';
@@ -138,7 +113,7 @@ async function loadData() {
       return '→';
     }
 
-    // Werte anzeigen
+    // Werte anzeigen mit Trend
     document.getElementById('spread').textContent =
       `${data.spread?.value ?? '–'} ${trendSymbol(data.spread?.value, data.previous?.spread?.value)}`;
     document.getElementById('spread').style.color = colorize(data.status?.spread);
@@ -162,19 +137,17 @@ async function loadData() {
       `Letzte Aktualisierung: ${data.timestamp_utc}`;
 
   } catch(e) {
+    document.getElementById('last-updated').textContent =
+      'Fehler beim Laden der Daten';
     console.error('Fehler beim Laden der Daten', e);
   }
 }
 
-// Dark Mode
-function setTheme() {
-  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+// Dark Mode automatisch nach System
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.documentElement.setAttribute('data-theme','dark');
 }
-
-setTheme();
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setTheme);
-
+  
 loadData();
 </script>
 </body>

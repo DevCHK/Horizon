@@ -100,8 +100,9 @@ canvas {
 <canvas id="combinedChart" style="margin-top:2rem"></canvas>
 <script>
 async function loadData() {
-  const res = await fetch('data/data.json');
-  const data = await res.json();
+  try {
+    const res = await fetch('data/data.json');
+    const data = await res.json();
 
     function colorize(value) {
       if(value==='green') return '#4ade80';
@@ -110,7 +111,7 @@ async function loadData() {
       return '#111';
     }
 
-    // Werte & Datenstand anzeigen
+    // Werte & Datenstand in Cards anzeigen
     document.getElementById('spread').textContent = data.spread?.value ?? '–';
     document.getElementById('spread').style.color = colorize(data.status?.spread);
     document.getElementById('spread-date').textContent = data.spread?.date ? `Datenstand: ${data.spread.date}` : '';
@@ -136,34 +137,33 @@ async function loadData() {
     // Kombiniertes Chart
     // -------------------
     const datasets = [];
-  const colors = { spread:'#4ade80', vix:'#f87171', hy:'#facc15', cape:'#3b82f6' };
-  ['spread','vix','high_yield_bps','shiller_cape'].forEach(key=>{
-    const history = data[key]?.history ?? [];
-    if(history.length>0){
-      datasets.push({
-        label:key,
-        data: history.map(d=>({x:d.date,y:d.value})),
-        borderColor: colors[key],
-        backgroundColor:'rgba(0,0,0,0)',
-        tension:0.3
-      });
-    }
-  });
-  
+    const colors = { spread:'#4ade80', vix:'#f87171', hy:'#facc15', cape:'#3b82f6' };
+    ['spread','vix','high_yield_bps','shiller_cape'].forEach(key=>{
+      const history = data[key]?.history ?? [];
+      if(history.length>0){
+        datasets.push({
+          label:key,
+          data: history.map(d=>({x:d.date,y:d.value})),
+          borderColor: colors[key],
+          backgroundColor:'rgba(0,0,0,0)',
+          tension:0.3
+        });
+      }
+    });
+
     new Chart(document.getElementById('combinedChart'), {
-    type:'line',
-    data:{datasets},
-    options:{
-      parsing:{xAxisKey:'x',yAxisKey:'y'},
-      responsive:true,
-      scales:{
-        x:{type:'time',time:{unit:'month'},title:{display:true,text:'Datum'}},
-        y:{title:{display:true,text:'Wert'}}
-      },
-      plugins:{legend:{display:true,position:'top'}}
-    }
-  });
-}
+      type:'line',
+      data:{datasets},
+      options:{
+        parsing:{xAxisKey:'x',yAxisKey:'y'},
+        responsive:true,
+        scales:{
+          x:{type:'time',time:{unit:'month'},title:{display:true,text:'Datum'}},
+          y:{title:{display:true,text:'Wert'}}
+        },
+        plugins:{legend:{display:true,position:'top'}}
+      }
+    });
 
   } catch(e) {
     console.error('Fehler beim Laden der Daten', e);
@@ -177,5 +177,6 @@ if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matche
 
 loadData();
 </script>
+
 </body>
 </html>

@@ -60,35 +60,32 @@
 </head>
 <body>
 <h1>Risikoanalyse Dashboard</h1>
-<div class="grid">
-  <div class="card">
-    <h2>Spread (10y-2y):</h2>
-    <div id="spread" class="value">–</div>
-    <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
-  </div>
-  <div class="card">
-    <h2>VIX:</h2>
-    <div id="vix" class="value">–</div>
-    <div class="description">Marktvolatilität (höher = riskanter).</div>
-  </div>
-  <div class="card">
-    <h2>High Yield (bps):</h2>
-    <div id="hy" class="value">–</div>
-    <div class="description">Risikoprämie für Hochzinsanleihen.</div>
-  </div>
-  <div class="card">
-    <h2>CAPE:</h2>
-    <div id="cape" class="value">–</div>
-    <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
-  </div>
-  <div class="card" style="grid-column:1/-1">
-    <h2>Gesamteinschätzung:</h2>
-    <div id="overall" class="value">–</div>
-    <div class="description">Grün = stabil, Gelb = Achtung, Rot = kritisch.</div>
-  </div>
-  <div class="card" style="grid-column:1/-1">
-    <div id="last-updated" class="description"></div>
-  </div>
+<div class="card">
+  <h2>Spread (10y-2y):</h2>
+  <div id="spread" class="value">–</div>
+  <div id="spread-date" class="description">–</div>
+  <div class="description">Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen.</div>
+</div>
+
+<div class="card">
+  <h2>VIX:</h2>
+  <div id="vix" class="value">–</div>
+  <div id="vix-date" class="description">–</div>
+  <div class="description">Marktvolatilität (höher = riskanter).</div>
+</div>
+
+<div class="card">
+  <h2>High Yield (bps):</h2>
+  <div id="hy" class="value">–</div>
+  <div id="hy-date" class="description">–</div>
+  <div class="description">Risikoprämie für Hochzinsanleihen.</div>
+</div>
+
+<div class="card">
+  <h2>CAPE:</h2>
+  <div id="cape" class="value">–</div>
+  <div id="cape-date" class="description">–</div>
+  <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
 </div>
 
 <script>
@@ -138,6 +135,10 @@ async function loadData() {
     `${data.shiller_cape?.value ?? '–'}`;
     document.getElementById('cape').style.color = colorize(data.status?.cape);
 
+document.getElementById('spread-date').textContent = `Abrufdatum: ${data.spread?.date ?? '–'}`;
+document.getElementById('vix-date').textContent = `Abrufdatum: ${data.vix?.date ?? '–'}`;
+document.getElementById('hy-date').textContent = `Abrufdatum: ${data.high_yield_bps?.date ?? '–'}`;
+document.getElementById('cape-date').textContent = `Abrufdatum: ${data.shiller_cape?.date ?? '–'}`;
 
   } catch(e) {
     document.getElementById('last-updated').textContent =

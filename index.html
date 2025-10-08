@@ -55,43 +55,38 @@ h1 {
   color: #555;
 }
 
-.trend {
-  font-size: 0.85rem;
-  margin-left: 0.25rem;
+canvas {
+  margin-top: 0.5rem;
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<h1>Risikoanalyse Dashboard</h1>
+<h1>📊 Risikoanalyse Dashboard</h1>
 <div class="grid">
   <div class="card">
     <div>Spread (10y-2y):</div>
     <div id="spread" class="value">–</div>
+    <div class="description" id="spread-date"></div>
     <canvas id="spreadChart"></canvas>
-    <div class="description">10y minus 2y Treasury Spread.</div>
-    <div id="spread-date" class="description"></div>
   </div>
   <div class="card">
     <div>VIX:</div>
     <div id="vix" class="value">–</div>
+    <div class="description" id="vix-date"></div>
     <canvas id="vixChart"></canvas>
-    <div class="description">Marktvolatilität (höher = riskanter).</div>
-    <div id="vix-date" class="description"></div>
   </div>
   <div class="card">
     <div>High Yield (bps):</div>
     <div id="hy" class="value">–</div>
+    <div class="description" id="hy-date"></div>
     <canvas id="hyChart"></canvas>
-    <div class="description">Risikoprämie für Hochzinsanleihen.</div>
-    <div id="hy-date" class="description"></div>
   </div>
   <div class="card">
     <div>CAPE:</div>
     <div id="cape" class="value">–</div>
+    <div class="description" id="cape-date"></div>
     <canvas id="capeChart"></canvas>
-    <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
-    <div id="cape-date" class="description"></div>
   </div>
   <div class="card" style="grid-column:1/-1">
     <div>Gesamteinschätzung:</div>
@@ -110,95 +105,75 @@ async function loadData() {
     const data = await res.json();
 
     function colorize(value) {
-      if(value === 'green') return '#4ade80';
-      if(value === 'yellow') return '#facc15';
-      if(value === 'red') return '#f87171';
+      if(value==='green') return '#4ade80';
+      if(value==='yellow') return '#facc15';
+      if(value==='red') return '#f87171';
       return '#111';
     }
 
-    // Werte
-    document.getElementById('spread').textContent = `${data.spread?.value ?? '–'}`;
+    function trendSymbol(current, previous) {
+      if(previous === undefined || previous === null) return '';
+      if(current > previous) return '▲';
+      if(current < previous) return '▼';
+      return '→';
+    }
+
+    // Werte & Datenstand anzeigen
+    document.getElementById('spread').textContent = data.spread?.value ?? '–';
     document.getElementById('spread').style.color = colorize(data.status?.spread);
     document.getElementById('spread-date').textContent = data.spread?.date ? `Datenstand: ${data.spread.date}` : '';
 
-    document.getElementById('vix').textContent = `${data.vix?.value ?? '–'}`;
+    document.getElementById('vix').textContent = data.vix?.value ?? '–';
     document.getElementById('vix').style.color = colorize(data.status?.vix);
     document.getElementById('vix-date').textContent = data.vix?.date ? `Datenstand: ${data.vix.date}` : '';
 
-    document.getElementById('hy').textContent = `${data.high_yield_bps?.value ?? '–'}`;
+    document.getElementById('hy').textContent = data.high_yield_bps?.value ?? '–';
     document.getElementById('hy').style.color = colorize(data.status?.hy);
     document.getElementById('hy-date').textContent = data.high_yield_bps?.date ? `Datenstand: ${data.high_yield_bps.date}` : '';
 
-    document.getElementById('cape').textContent = `${data.shiller_cape?.value ?? '–'}`;
+    document.getElementById('cape').textContent = data.shiller_cape?.value ?? '–';
     document.getElementById('cape').style.color = colorize(data.status?.cape);
     document.getElementById('cape-date').textContent = data.shiller_cape?.date ? `Datenstand: ${data.shiller_cape.date}` : '';
 
+    document.getElementById('overall').textContent = data.status?.overall ?? '–';
+    document.getElementById('overall').style.color = colorize(data.status?.overall);
+
     document.getElementById('last-updated').textContent = `Letzte Aktualisierung: ${data.timestamp_utc}`;
 
+    // -------------------
     // Charts
-    if (data.spread?.history) {
-      new Chart(document.getElementById('spreadChart'), {
-        type: 'line',
-        data: {
-          labels: data.spread.history.map(d => d.date),
-          datasets: [{
-            label: 'Spread',
-            data: data.spread.history.map(d => d.value),
-            borderColor: '#4ade80',
-            tension: 0.3
-          }]
-        },
-        options: { responsive: true, plugins: { legend: { display: false } } }
-      });
-    }
+    // -------------------
+    const charts = [
+      {id:'spreadChart', values:data.spread?.history ?? [], color:'#4ade80', label:'Spread'},
+      {id:'vixChart', values:data.vix?.history ?? [], color:'#f87171', label:'VIX'},
+      {id:'hyChart', values:data.high_yield_bps?.history ?? [], color:'#facc15', label:'High Yield'},
+      {id:'capeChart', values:data.shiller_cape?.history ?? [], color:'#3b82f6', label:'CAPE'}
+    ];
 
-    if (data.vix?.history) {
-      new Chart(document.getElementById('vixChart'), {
-        type: 'line',
-        data: {
-          labels: data.vix.history.map(d => d.date),
-          datasets: [{
-            label: 'VIX',
-            data: data.vix.history.map(d => d.value),
-            borderColor: '#facc15',
-            tension: 0.3
-          }]
-        },
-        options: { responsive: true, plugins: { legend: { display: false } } }
-      });
-    }
-
-    if (data.high_yield_bps?.history) {
-      new Chart(document.getElementById('hyChart'), {
-        type: 'line',
-        data: {
-          labels: data.high_yield_bps.history.map(d => d.date),
-          datasets: [{
-            label: 'High Yield',
-            data: data.high_yield_bps.history.map(d => d.value),
-            borderColor: '#f87171',
-            tension: 0.3
-          }]
-        },
-        options: { responsive: true, plugins: { legend: { display: false } } }
-      });
-    }
-
-    if (data.shiller_cape?.history) {
-      new Chart(document.getElementById('capeChart'), {
-        type: 'line',
-        data: {
-          labels: data.shiller_cape.history.map(d => d.date),
-          datasets: [{
-            label: 'CAPE',
-            data: data.shiller_cape.history.map(d => d.value),
-            borderColor: '#60a5fa',
-            tension: 0.3
-          }]
-        },
-        options: { responsive: true, plugins: { legend: { display: false } } }
-      });
-    }
+    charts.forEach(c=>{
+      if(c.values.length>0){
+        new Chart(document.getElementById(c.id), {
+          type:'line',
+          data:{
+            labels: c.values.map(d=>d.date),
+            datasets:[{
+              label:c.label,
+              data:c.values.map(d=>d.value),
+              borderColor:c.color,
+              backgroundColor:'rgba(0,0,0,0)',
+              tension:0.3
+            }]
+          },
+          options:{
+            responsive:true,
+            scales:{
+              x:{ display:true },
+              y:{ display:true }
+            }
+          }
+        });
+      }
+    });
 
   } catch(e) {
     console.error('Fehler beim Laden der Daten', e);

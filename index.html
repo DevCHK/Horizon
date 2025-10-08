@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Risikoanalyse Dashboard</title>
 <style>
-   /* Grundfarben für Light/Dark Mode */
- :root {
+:root {
   --bg: #f8f9fa;
   --text: #111;
   --card-bg: #fff;
@@ -16,48 +15,52 @@
   --text: #f7f7f7;
   --card-bg: #1f1f1f;
 }
-  body {
-    margin: 0;
-    font-family: sans-serif;
-    background-color: var(--bg);
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: var(--bg);
   color: var(--text);
-    padding: 1rem;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .grid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: 1fr;
-  }
-
-  @media(min-width:600px) {
-    .grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  .card {
-  background-color: var(--card-bg);
+  padding: 1rem;
 }
 
-  .value {
-    font-size: 1.25rem;
-    font-weight: bold;
-  }
+h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
 
-  .description {
-    font-size: 0.85rem;
-    color: #555;
-  }
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
 
-  .trend {
-    font-size: 0.85rem;
-    margin-left: 0.25rem;
-  }
+@media(min-width:600px) {
+  .grid { grid-template-columns: 1fr 1fr; }
+}
+
+.card {
+  background-color: var(--card-bg);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.value {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.trend {
+  font-size: 0.85rem;
+  margin-left: 0.25rem;
+}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <h1>Risikoanalyse Dashboard</h1>
@@ -65,29 +68,30 @@
   <div class="card">
     <div>Spread (10y-2y):</div>
     <div id="spread" class="value">–</div>
-    <div class="description">10-Year Treasury Constant Maturity Minus 2-Year Treasury Constant Maturity. Zinsdifferenz zwischen 10-jährigen und 2-jährigen Staatsanleihen. Was bedeutet die Entwicklung des Spreads? 
-Positiver (steiler) Spread: Wenn die Rendite der 10-jährigen Anleihe höher ist als die der 2-jährigen Anleihe, deutet dies auf eine Erwartung stärkeren Wirtschaftswachstums und potenziell höherer Inflation hin.
-Negativer (invertierter) Spread: Wenn die Rendite der 2-jährigen Anleihe höher ist als die der 10-jährigen Anleihe, ist dies oft ein Warnsignal für eine bevorstehende Rezession.
-Schmaler werdender (flacher werdender) Spread: Eine Verengung des Spreads kann anzeigen, dass die Anleger eine Verlangsamung des Wirtschaftswachstums oder eine lockerere Geldpolitik erwarten.</div>
-     <div id="spread-date" class="description"></div>
+    <canvas id="spreadChart"></canvas>
+    <div class="description">10y minus 2y Treasury Spread.</div>
+    <div id="spread-date" class="description"></div>
   </div>
   <div class="card">
     <div>VIX:</div>
     <div id="vix" class="value">–</div>
+    <canvas id="vixChart"></canvas>
     <div class="description">Marktvolatilität (höher = riskanter).</div>
-     <div id="vix-date" class="description"></div>
+    <div id="vix-date" class="description"></div>
   </div>
   <div class="card">
     <div>High Yield (bps):</div>
     <div id="hy" class="value">–</div>
+    <canvas id="hyChart"></canvas>
     <div class="description">Risikoprämie für Hochzinsanleihen.</div>
-     <div id="hy-date" class="description"></div>
+    <div id="hy-date" class="description"></div>
   </div>
   <div class="card">
     <div>CAPE:</div>
     <div id="cape" class="value">–</div>
+    <canvas id="capeChart"></canvas>
     <div class="description">Bewertungskennzahl für den Aktienmarkt.</div>
-     <div id="cape-date" class="description"></div>
+    <div id="cape-date" class="description"></div>
   </div>
   <div class="card" style="grid-column:1/-1">
     <div>Gesamteinschätzung:</div>
@@ -105,7 +109,6 @@ async function loadData() {
     const res = await fetch('data/data.json');
     const data = await res.json();
 
-    // Farbe nach Ampelstatus
     function colorize(value) {
       if(value === 'green') return '#4ade80';
       if(value === 'yellow') return '#facc15';
@@ -113,42 +116,89 @@ async function loadData() {
       return '#111';
     }
 
-    // Trendpfeile
-    function trendSymbol(current, previous) {
-      if(previous === undefined || previous === null) return '';
-      if(current > previous) return '▲';
-      if(current < previous) return '▼';
-      return '→';
+    // Werte
+    document.getElementById('spread').textContent = `${data.spread?.value ?? '–'}`;
+    document.getElementById('spread').style.color = colorize(data.status?.spread);
+    document.getElementById('spread-date').textContent = data.spread?.date ? `Datenstand: ${data.spread.date}` : '';
+
+    document.getElementById('vix').textContent = `${data.vix?.value ?? '–'}`;
+    document.getElementById('vix').style.color = colorize(data.status?.vix);
+    document.getElementById('vix-date').textContent = data.vix?.date ? `Datenstand: ${data.vix.date}` : '';
+
+    document.getElementById('hy').textContent = `${data.high_yield_bps?.value ?? '–'}`;
+    document.getElementById('hy').style.color = colorize(data.status?.hy);
+    document.getElementById('hy-date').textContent = data.high_yield_bps?.date ? `Datenstand: ${data.high_yield_bps.date}` : '';
+
+    document.getElementById('cape').textContent = `${data.shiller_cape?.value ?? '–'}`;
+    document.getElementById('cape').style.color = colorize(data.status?.cape);
+    document.getElementById('cape-date').textContent = data.shiller_cape?.date ? `Datenstand: ${data.shiller_cape.date}` : '';
+
+    document.getElementById('last-updated').textContent = `Letzte Aktualisierung: ${data.timestamp_utc}`;
+
+    // Charts
+    if (data.spread?.history) {
+      new Chart(document.getElementById('spreadChart'), {
+        type: 'line',
+        data: {
+          labels: data.spread.history.map(d => d.date),
+          datasets: [{
+            label: 'Spread',
+            data: data.spread.history.map(d => d.value),
+            borderColor: '#4ade80',
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
     }
 
-    // Werte anzeigen mit Trend
-   document.getElementById('spread').textContent =
-  `${data.spread?.value ?? '–'}`;
-document.getElementById('spread').style.color = colorize(data.status?.spread);
-document.getElementById('spread-date').textContent =
-  data.spread?.date ? `Datenstand: ${data.spread.date}` : '';
-  
-document.getElementById('vix').textContent =
-  `${data.vix?.value ?? '–'}`;
-document.getElementById('vix').style.color = colorize(data.status?.vix);
-document.getElementById('vix-date').textContent =
-  data.vix?.date ? `Datenstand: ${data.vix.date}` : '';
+    if (data.vix?.history) {
+      new Chart(document.getElementById('vixChart'), {
+        type: 'line',
+        data: {
+          labels: data.vix.history.map(d => d.date),
+          datasets: [{
+            label: 'VIX',
+            data: data.vix.history.map(d => d.value),
+            borderColor: '#facc15',
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
 
-document.getElementById('hy').textContent =
-  `${data.high_yield_bps?.value ?? '–'}`;
-document.getElementById('hy').style.color = colorize(data.status?.hy);
-document.getElementById('hy-date').textContent =
-  data.high_yield_bps?.date ? `Datenstand: ${data.high_yield_bps.date}` : '';
+    if (data.high_yield_bps?.history) {
+      new Chart(document.getElementById('hyChart'), {
+        type: 'line',
+        data: {
+          labels: data.high_yield_bps.history.map(d => d.date),
+          datasets: [{
+            label: 'High Yield',
+            data: data.high_yield_bps.history.map(d => d.value),
+            borderColor: '#f87171',
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
 
-document.getElementById('cape').textContent =
-  `${data.shiller_cape?.value ?? '–'}`;
-document.getElementById('cape').style.color = colorize(data.status?.cape);
-document.getElementById('cape-date').textContent =
-  data.shiller_cape?.date ? `Datenstand: ${data.shiller_cape.date}` : '';
-
-document.getElementById('last-updated').textContent =
-  `Letzte Aktualisierung: ${data.timestamp_utc}`;
-
+    if (data.shiller_cape?.history) {
+      new Chart(document.getElementById('capeChart'), {
+        type: 'line',
+        data: {
+          labels: data.shiller_cape.history.map(d => d.date),
+          datasets: [{
+            label: 'CAPE',
+            data: data.shiller_cape.history.map(d => d.value),
+            borderColor: '#60a5fa',
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
 
   } catch(e) {
     console.error('Fehler beim Laden der Daten', e);
@@ -159,7 +209,7 @@ document.getElementById('last-updated').textContent =
 if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
   document.documentElement.setAttribute('data-theme','dark');
 }
-  
+
 loadData();
 </script>
 </body>

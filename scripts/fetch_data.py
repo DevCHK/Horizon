@@ -3,7 +3,7 @@ import json
 import datetime as dt
 import requests
 import yfinance as yf
-import pandas as pd
+from bs4 import BeautifulSoup
 
 OUTFILE = 'data/data.json'
 
@@ -69,33 +69,30 @@ def fetch_yf(ticker):
 vix = fetch_yf('^VIX')
 hy = fetch_yf('BAMLH0A0HYM2')  # Optional: ersetzen, wenn BofA HY Spread via Yahoo nicht verfügbar
 
-# CAPE über Shiller Excel (nur letzter Wert)
+# CAPE über multpl.com
 def fetch_cape():
     try:
-        # Shiller Excel-Datei
-        url = "https://www.econ.yale.edu/~shiller/data/ie_data.xls"
-        df = pd.read_excel(url, sheet_name="Data", skiprows=7)
-        
-        # Spalten, auf CAPE achten
-        df = df.dropna(subset=["CAPE"])
-        
-        # Letzten verfügbaren Wert nehmen
-        last = df.iloc[-1]
+        url = "https://www.multpl.com/shiller-pe"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        cape_value = soup.find('div', class_='value').text.strip()
+        cape_change = soup.find('div', class_='change').text.strip()
         return {
-            "value": float(last["CAPE"]),
-            "date": str(last["Date"])
+            "value": float(cape_value.replace(',', '')),
+            "change": cape_change,
+            "date": str(dt.datetime.utcnow().date())
         }
     except Exception as e:
-        print("Fehler beim CAPE-Download:", e)
+        print("Fehler beim Abrufen des CAPE-Werts:", e)
         return {
             "value": None,
+            "change": None,
             "date": None
         }
 
 if __name__ == "__main__":
     cape = fetch_cape()
     print("CAPE:", cape)
-
 
 # High Yield Spread über FRED
 try:

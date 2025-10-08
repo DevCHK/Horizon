@@ -1,11 +1,11 @@
 {
-  "timestamp_utc": "2025-10-08T19:13:36.966998",
+  "timestamp_utc": "2025-10-08T19:23:58.453317",
   "spread": {
     "value": 0.57,
     "date": "2025-10-07"
   },
   "vix": {
-    "value": 16.510000228881836,
+    "value": 16.520000457763672,
     "prev_value": 17.239999771118164,
     "date": "2025-10-08"
   },
@@ -21,7 +21,7 @@
     "vix": "green",
     "hy": "green",
     "cape": "red",
-    "spread": "green",
-    "overall": "green"
+    "spread": "yellow",
+    "overall": "yellow"
   }
 }

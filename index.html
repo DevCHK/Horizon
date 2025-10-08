@@ -112,10 +112,12 @@ async function loadData() {
     document.getElementById('spread-date').textContent = `Abrufdatum: ${data.spread?.date ?? '–'}`;
 
     // VIX
-    document.getElementById('vix').textContent =
-      `${data.vix?.value ?? '–'} ${trendSymbol(data.vix?.value, data.previous?.vix?.value)}`;
-    document.getElementById('vix').style.color = colorize(data.status?.vix);
-    document.getElementById('vix-date').textContent = `Abrufdatum: ${data.vix?.date ?? '–'}`;
+const vixVal = data.vix?.value ?? null;
+document.getElementById('vix').textContent =
+  vixVal !== null ? `${vixVal.toFixed(2)} ${trendSymbol(vixVal, data.vix?.prev_value)}` : '–';
+document.getElementById('vix').style.color = colorize(data.status?.vix);
+document.getElementById('vix-date').textContent = `Abrufdatum: ${data.vix?.date ?? '–'}`;
+
 
     // High Yield
     document.getElementById('hy').textContent =

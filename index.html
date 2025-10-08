@@ -82,6 +82,7 @@ async function loadData() {
   try {
     const res = await fetch('data/data.json');
     const data = await res.json();
+    console.log('Geladene JSON-Daten:', data);
 
     function colorize(value) {
       if(value==='green') return '#4ade80';
@@ -90,60 +91,84 @@ async function loadData() {
       return '#111';
     }
 
-    // Werte in Cards anzeigen
-    document.getElementById('spread').textContent = data.spread?.value ?? '–';
-    document.getElementById('spread').style.color = colorize(data.status?.spread);
-    document.getElementById('spread-date').textContent = data.spread?.date ? `Datenstand: ${data.spread.date}` : '';
-
-    document.getElementById('vix').textContent = data.vix?.value ?? '–';
-    document.getElementById('vix').style.color = colorize(data.status?.vix);
-    document.getElementById('vix-date').textContent = data.vix?.date ? `Datenstand: ${data.vix.date}` : '';
-
-    document.getElementById('hy').textContent = data.high_yield_bps?.value ?? '–';
-    document.getElementById('hy').style.color = colorize(data.status?.hy);
-    document.getElementById('hy-date').textContent = data.high_yield_bps?.date ? `Datenstand: ${data.high_yield_bps.date}` : '';
-
-    document.getElementById('cape').textContent = data.shiller_cape?.value ?? '–';
-    document.getElementById('cape').style.color = colorize(data.status?.cape);
-    document.getElementById('cape-date').textContent = data.shiller_cape?.date ? `Datenstand: ${data.shiller_cape.date}` : '';
-
-    document.getElementById('overall').textContent = data.status?.overall ?? '–';
-    document.getElementById('overall').style.color = colorize(data.status?.overall);
-
-    document.getElementById('last-updated').textContent = `Letzte Aktualisierung: ${data.timestamp_utc}`;
-
     // -------------------
-    // Chart vorbereiten
+    // Cards aktualisieren
     // -------------------
-    const colors = { spread:'#4ade80', vix:'#f87171', hy:'#facc15', cape:'#3b82f6' };
-    const datasets = ['spread','vix','high_yield_bps','shiller_cape'].map(key => {
-      const hist = data[key]?.history ?? [];
-      return {
-        label: key,
-        data: hist.map(d => ({ x: d.date, y: d.value })),
-        borderColor: colors[key],
-        backgroundColor: 'rgba(0,0,0,0)',
-        tension: 0.3
-      };
+    const cards = [
+      {id:'spread', key:'spread'},
+      {id:'vix', key:'vix'},
+      {id:'hy', key:'high_yield_bps'},
+      {id:'cape', key:'shiller_cape'}
+    ];
+
+    cards.forEach(card => {
+      const val = data[card.key]?.value;
+      const date = data[card.key]?.date;
+      const status = data.status?.[card.key] ?? 'unknown';
+
+      document.getElementById(card.id).textContent = (val != null) ? val : '–';
+      document.getElementById(card.id).style.color = colorize(status);
+      document.getElementById(`${card.id}-date`).textContent = date ? `Datenstand: ${date}` : '';
     });
 
-    new Chart(document.getElementById('combinedChart'), {
-      type: 'line',
-      data: { datasets },
-      options: {
-        responsive: true,
-        parsing: { xAxisKey:'x', yAxisKey:'y' },
-        scales: {
-          x: {
-            type: 'time',
-            time: { unit: 'day', tooltipFormat: 'yyyy-MM-dd' },
-            title: { display:true, text:'Datum' }
-          },
-          y: { title: { display:true, text:'Wert' } }
-        },
-        plugins: { legend:{ display:true, position:'top' } }
+    // Gesamteinschätzung
+    const overall = data.status?.overall ?? 'unknown';
+    document.getElementById('overall').textContent = (overall != 'unknown') ? overall : '–';
+    document.getElementById('overall').style.color = colorize(overall);
+
+    document.getElementById('last-updated').textContent = `Letzte Aktualisierung: ${data.timestamp_utc ?? '-'}`;
+
+    // -------------------
+    // Kombiniertes Chart
+    // -------------------
+    const datasets = [];
+    const colors = { spread:'#4ade80', vix:'#f87171', hy:'#facc15', cape:'#3b82f6' };
+    const chartKeys = [
+      {key:'spread', label:'Spread'},
+      {key:'vix', label:'VIX'},
+      {key:'high_yield_bps', label:'High Yield'},
+      {key:'shiller_cape', label:'CAPE'}
+    ];
+
+    chartKeys.forEach(item => {
+      const history = data[item.key]?.history ?? [];
+      const value = data[item.key]?.value;
+
+      // Nur Dataset erstellen, wenn history vorhanden und value nicht null
+      if(history.length > 0 && value != null){
+        const filteredHistory = history
+          .filter(d => d.value != null) // keine null-Werte
+          .map(d => ({x:d.date, y:d.value}));
+        datasets.push({
+          label: item.label,
+          data: filteredHistory,
+          borderColor: colors[item.key],
+          backgroundColor:'rgba(0,0,0,0)',
+          tension:0.3
+        });
+      } else {
+        console.warn(`Kein Dataset für ${item.key}: history leer oder value null`);
       }
     });
+
+    const ctx = document.getElementById('combinedChart').getContext('2d');
+    if(datasets.length > 0){
+      new Chart(ctx, {
+        type:'line',
+        data:{datasets},
+        options:{
+          parsing:{xAxisKey:'x',yAxisKey:'y'},
+          responsive:true,
+          scales:{
+            x:{type:'time',time:{unit:'month'},title:{display:true,text:'Datum'}},
+            y:{title:{display:true,text:'Wert'}}
+          },
+          plugins:{legend:{display:true,position:'top'}}
+        }
+      });
+    } else {
+      console.warn('Kein Chart dargestellt: keine validen Daten vorhanden.');
+    }
 
   } catch(e) {
     console.error('Fehler beim Laden der Daten', e);
@@ -157,6 +182,7 @@ if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matche
 
 loadData();
 </script>
+
 
 </body>
 </html>

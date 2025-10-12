@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2025-10-11T12:39:33.080403",
+  "timestamp_utc": "2025-10-12T12:39:58.483643",
   "spread": {
     "value": 0.53,
     "prev_value": 0.54,
@@ -18,7 +18,7 @@
   "shiller_cape": {
     "value": 39.09,
     "prev_value": null,
-    "date": "2025-10-11"
+    "date": "2025-10-12"
   },
   "status": {
     "vix": "yellow",

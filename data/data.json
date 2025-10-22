@@ -1,24 +1,24 @@
 {
-  "timestamp_utc": "2025-10-21T12:49:28.360581",
+  "timestamp_utc": "2025-10-22T12:49:57.846228",
   "spread": {
-    "value": 0.54,
-    "prev_value": 0.56,
-    "date": "2025-10-20"
-  },
-  "vix": {
-    "value": 18.59000015258789,
-    "prev_value": 18.229999542236328,
+    "value": 0.53,
+    "prev_value": 0.54,
     "date": "2025-10-21"
   },
+  "vix": {
+    "value": 17.93000030517578,
+    "prev_value": 17.8700008392334,
+    "date": "2025-10-22"
+  },
   "high_yield_bps": {
-    "value": 3.04,
+    "value": 2.99,
     "prev_value": 3.04,
-    "date": "2025-10-17"
+    "date": "2025-10-20"
   },
   "shiller_cape": {
     "value": 40.21,
     "prev_value": null,
-    "date": "2025-10-21"
+    "date": "2025-10-22"
   },
   "status": {
     "vix": "green",
